@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../domain/models/ai_model.dart';
+import '../../domain/models/drawing_points.dart';
 import '../providers/ai_provider.dart';
 import '../providers/drawing_provider.dart';
 import 'ai_result_dialog.dart';
@@ -10,112 +12,62 @@ class AIButton extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final aiState = ref.watch(aiProvider);
-    final isLoading = aiState.isLoading;
+    final drawingState = ref.watch(drawingProvider);
 
-    return Container(
-      height: 45,
-      child: ElevatedButton(
-        onPressed: isLoading
-            ? null
-            : () async {
-                final drawingNotifier = ref.read(drawingProvider.notifier);
+    return FloatingActionButton(
+      onPressed: aiState.isLoading || drawingState.points.isEmpty
+          ? null
+          : () async {
+              try {
                 final drawingState = ref.read(drawingProvider);
 
-                if (drawingState.points.isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Lütfen önce bir çizim yapın'),
-                    ),
+                // AI modeli oluştur
+                final model = AIModel(
+                  modelType: AIModelType.realistic,
+                  basePrompt: '''
+Transform this sketch into an ultra-realistic photograph. Enhance the sketch with natural lighting, realistic shadows, and fine details. 
+Add depth using professional photography techniques, incorporating realistic textures, materials, and surface details. 
+Ensure the result is indistinguishable from a professional DSLR camera photo, with perfect exposure, vibrant color grading, and a photorealistic finish.
+  ''',
+                );
+
+                // DrawingPoints oluştur
+                final drawingPoints = DrawingPoints(
+                  points: drawingState.points,
+                  currentPaint: drawingState.currentPaint,
+                );
+
+                // Resmi oluştur
+                final imageUrl =
+                    await ref.read(aiProvider.notifier).generateImage(
+                          drawingPoints,
+                          model: model,
+                        );
+
+                if (context.mounted) {
+                  showDialog(
+                    context: context,
+                    builder: (context) => AIResultDialog(imageUrl: imageUrl),
                   );
-                  return;
                 }
-
-                drawingNotifier.optimizeDrawing();
-
-                try {
-                  await ref
-                      .read(aiProvider.notifier)
-                      .generateImage(drawingState);
-
-                  if (context.mounted) {
-                    showDialog(
-                      context: context,
-                      barrierDismissible: false,
-                      builder: (context) => const AIResultDialog(),
-                    );
-                  }
-                } catch (e) {
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Hata: $e'),
-                        backgroundColor: Colors.red,
-                      ),
-                    );
-                  }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Hata: $e')),
+                  );
                 }
-              },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: isLoading ? Colors.grey.shade300 : Colors.deepPurple,
-          foregroundColor: Colors.white,
-          elevation: isLoading ? 0 : 4,
-          shadowColor: Colors.deepPurple.withOpacity(0.4),
-          padding: EdgeInsets.zero,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(30),
-          ),
-          disabledBackgroundColor: Colors.grey.shade300,
-          disabledForegroundColor: Colors.white,
-        ),
-        child: Container(
-          width: isLoading ? 120 : 100,
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Center(
-            child: isLoading
-                ? Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          color: Colors.deepPurple,
-                          strokeWidth: 2,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'AI',
-                        style: TextStyle(
-                          color: Colors.deepPurple,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  )
-                : Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.auto_awesome,
-                        color: Colors.white,
-                        size: 18,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'AI',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-          ),
-        ),
-      ),
+              }
+            },
+      child: aiState.isLoading
+          ? const SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(
+                color: Colors.white,
+                strokeWidth: 2,
+              ),
+            )
+          : const Icon(Icons.auto_awesome),
     );
   }
 }

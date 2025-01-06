@@ -1,33 +1,75 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/models/drawing_point.dart';
-import 'dart:math' as Math;
+
+enum BrushType {
+  normal,
+  soft,
+  square,
+  calligraphy,
+}
+
+class DrawingState {
+  final List<DrawingPoint> points;
+  final Paint currentPaint;
+  final bool isErasing;
+  final double strokeWidth;
+  final Color selectedColor;
+  final BrushType brushType;
+
+  const DrawingState({
+    required this.points,
+    required this.currentPaint,
+    required this.isErasing,
+    required this.strokeWidth,
+    required this.selectedColor,
+    required this.brushType,
+  });
+
+  DrawingState copyWith({
+    List<DrawingPoint>? points,
+    Paint? currentPaint,
+    bool? isErasing,
+    double? strokeWidth,
+    Color? selectedColor,
+    BrushType? brushType,
+  }) {
+    return DrawingState(
+      points: points ?? this.points,
+      currentPaint: currentPaint ?? this.currentPaint,
+      isErasing: isErasing ?? this.isErasing,
+      strokeWidth: strokeWidth ?? this.strokeWidth,
+      selectedColor: selectedColor ?? this.selectedColor,
+      brushType: brushType ?? this.brushType,
+    );
+  }
+}
 
 final drawingProvider =
-    StateNotifierProvider<DrawingNotifier, DrawingPoints>((ref) {
+    StateNotifierProvider<DrawingNotifier, DrawingState>((ref) {
   return DrawingNotifier();
 });
 
-class DrawingNotifier extends StateNotifier<DrawingPoints> {
+class DrawingNotifier extends StateNotifier<DrawingState> {
   DrawingNotifier()
-      : super(DrawingPoints(
+      : super(DrawingState(
           points: [],
           currentPaint: Paint()
             ..color = Colors.black
-            ..strokeWidth = 3.0
+            ..strokeWidth = 3
             ..strokeCap = StrokeCap.round
+            ..strokeJoin = StrokeJoin.round
             ..style = PaintingStyle.stroke,
+          isErasing: false,
+          strokeWidth: 3,
+          selectedColor: Colors.black,
+          brushType: BrushType.normal,
         ));
 
-  void startDrawing(Offset offset) {
+  void addPoint(Offset point) {
     final newPoint = DrawingPoint(
-      offset: offset,
-      paint: Paint()
-        ..color = state.currentPaint.color
-        ..strokeWidth = state.currentPaint.strokeWidth
-        ..strokeCap = StrokeCap.round
-        ..style = PaintingStyle.stroke,
-      isStartOfLine: true,
+      point: point,
+      paint: state.currentPaint,
     );
 
     state = state.copyWith(
@@ -35,119 +77,108 @@ class DrawingNotifier extends StateNotifier<DrawingPoints> {
     );
   }
 
-  void addPoint(Offset offset) {
-    if (state.points.isEmpty) {
-      startDrawing(offset);
-      return;
-    }
-
-    // Son nokta ile yeni nokta arasındaki mesafeyi kontrol et
-    final lastPoint = state.points.last;
-    final distance = (lastPoint.offset - offset).distance;
-
-    // Minimum mesafe kontrolü (çok yakın noktaları ekleme)
-    if (distance < 2.0) {
-      return;
-    }
-
-    // Maksimum nokta sayısı kontrolü
-    if (state.points.length > 3000) {
-      // En eski noktaları sil
-      final newPoints = state.points.sublist(state.points.length - 3000);
-      state = state.copyWith(points: newPoints);
-    }
-
-    final newPoint = DrawingPoint(
-      offset: offset,
-      paint: Paint()
-        ..color = state.currentPaint.color
-        ..strokeWidth = state.currentPaint.strokeWidth
-        ..strokeCap = StrokeCap.round
-        ..style = PaintingStyle.stroke,
-    );
+  void endLine() {
+    if (state.points.isEmpty) return;
 
     state = state.copyWith(
-      points: [...state.points, newPoint],
+      points: [
+        ...state.points,
+        DrawingPoint(
+          point: Offset.infinite,
+          paint: state.currentPaint,
+        ),
+      ],
     );
-  }
-
-  void endDrawing() {
-    // Çizim bittiğinde yapılacak işlemler buraya eklenebilir
-  }
-
-  void updateColor(Color color) {
-    final newPaint = Paint()
-      ..color = color
-      ..strokeWidth = state.currentPaint.strokeWidth
-      ..strokeCap = StrokeCap.round
-      ..style = PaintingStyle.stroke;
-
-    state = state.copyWith(currentPaint: newPaint);
-  }
-
-  void updateStrokeWidth(double width) {
-    final newPaint = Paint()
-      ..color = state.currentPaint.color
-      ..strokeWidth = width
-      ..strokeCap = StrokeCap.round
-      ..style = PaintingStyle.stroke;
-
-    state = state.copyWith(currentPaint: newPaint);
   }
 
   void clear() {
     state = state.copyWith(points: []);
   }
 
-  void undo() {
-    if (state.points.isEmpty) return;
+  void toggleEraser() {
+    final isErasing = !state.isErasing;
+    final paint = Paint()
+      ..strokeWidth = state.strokeWidth
+      ..strokeCap = _getStrokeCap()
+      ..strokeJoin = _getStrokeJoin()
+      ..style = PaintingStyle.stroke
+      ..color = isErasing ? Colors.white : state.selectedColor;
 
-    // Son çizgi grubunu bul
-    final points = [...state.points];
-    for (var i = points.length - 1; i >= 0; i--) {
-      if (points[i].isStartOfLine && i > 0) {
-        points.removeRange(i, points.length);
-        state = state.copyWith(points: points);
-        return;
-      }
-    }
-
-    // Eğer başka çizgi grubu yoksa tümünü temizle
-    clear();
+    state = state.copyWith(
+      isErasing: isErasing,
+      currentPaint: paint,
+    );
   }
 
-  // Çizimi optimize et
-  void optimizeDrawing() {
-    if (state.points.length < 3) return;
+  void updateStrokeWidth(double width) {
+    final paint = Paint()
+      ..strokeWidth = width
+      ..strokeCap = _getStrokeCap()
+      ..strokeJoin = _getStrokeJoin()
+      ..style = PaintingStyle.stroke
+      ..color = state.isErasing ? Colors.white : state.selectedColor;
 
-    final optimizedPoints = <DrawingPoint>[];
-    optimizedPoints.add(state.points.first);
-
-    for (var i = 1; i < state.points.length - 1; i++) {
-      final prev = state.points[i - 1];
-      final current = state.points[i];
-      final next = state.points[i + 1];
-
-      // Noktalar arasındaki açıyı kontrol et
-      final angle = _calculateAngle(prev.offset, current.offset, next.offset);
-
-      // Eğer açı belirli bir değerden büyükse veya nokta bir çizginin başlangıcıysa ekle
-      if (angle > 10 || current.isStartOfLine) {
-        optimizedPoints.add(current);
-      }
-    }
-
-    optimizedPoints.add(state.points.last);
-    state = state.copyWith(points: optimizedPoints);
+    state = state.copyWith(
+      strokeWidth: width,
+      currentPaint: paint,
+    );
   }
 
-  // İki vektör arasındaki açıyı hesapla
-  double _calculateAngle(Offset p1, Offset p2, Offset p3) {
-    final vector1 = p1 - p2;
-    final vector2 = p3 - p2;
+  void updateColor(Color color) {
+    if (state.isErasing) return;
 
-    final angle =
-        Math.atan2(vector2.dy, vector2.dx) - Math.atan2(vector1.dy, vector1.dx);
-    return (angle * 180 / Math.pi).abs();
+    final paint = Paint()
+      ..strokeWidth = state.strokeWidth
+      ..strokeCap = _getStrokeCap()
+      ..strokeJoin = _getStrokeJoin()
+      ..style = PaintingStyle.stroke
+      ..color = color;
+
+    state = state.copyWith(
+      selectedColor: color,
+      currentPaint: paint,
+    );
+  }
+
+  void updateBrushType(BrushType type) {
+    final paint = Paint()
+      ..strokeWidth = state.strokeWidth
+      ..strokeCap = _getStrokeCap(type)
+      ..strokeJoin = _getStrokeJoin(type)
+      ..style = PaintingStyle.stroke
+      ..color = state.isErasing ? Colors.white : state.selectedColor;
+
+    state = state.copyWith(
+      brushType: type,
+      currentPaint: paint,
+    );
+  }
+
+  StrokeCap _getStrokeCap([BrushType? type]) {
+    final brushType = type ?? state.brushType;
+    switch (brushType) {
+      case BrushType.normal:
+        return StrokeCap.round;
+      case BrushType.soft:
+        return StrokeCap.round;
+      case BrushType.square:
+        return StrokeCap.square;
+      case BrushType.calligraphy:
+        return StrokeCap.square;
+    }
+  }
+
+  StrokeJoin _getStrokeJoin([BrushType? type]) {
+    final brushType = type ?? state.brushType;
+    switch (brushType) {
+      case BrushType.normal:
+        return StrokeJoin.round;
+      case BrushType.soft:
+        return StrokeJoin.round;
+      case BrushType.square:
+        return StrokeJoin.miter;
+      case BrushType.calligraphy:
+        return StrokeJoin.bevel;
+    }
   }
 }

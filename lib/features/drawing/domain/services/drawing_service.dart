@@ -4,6 +4,7 @@ import 'package:flutter/rendering.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import '../models/drawing_point.dart';
+import '../models/drawing_points.dart';
 
 class DrawingService {
   static Future<ui.Image?> convertDrawingToImage(
@@ -26,9 +27,11 @@ class DrawingService {
 
     // Çizim noktaları
     for (var i = 0; i < points.length - 1; i++) {
+      if (points[i + 1].point == Offset.infinite) continue;
+
       canvas.drawLine(
-        points[i].offset,
-        points[i + 1].offset,
+        points[i].point,
+        points[i + 1].point,
         points[i].paint,
       );
     }

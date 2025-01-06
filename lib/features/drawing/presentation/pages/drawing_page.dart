@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../widgets/drawing_canvas.dart';
 import '../widgets/drawing_toolbar.dart';
-import '../widgets/ai_result_dialog.dart';
-import '../providers/drawing_provider.dart';
-import '../providers/ai_provider.dart';
+import '../widgets/ai_button.dart';
 
 class DrawingPage extends ConsumerWidget {
   const DrawingPage({super.key});
@@ -13,37 +11,27 @@ class DrawingPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Çizim Yap'),
-        backgroundColor: Colors.deepPurple,
-        actions: [
-          // Geri al butonu
-          IconButton(
-            icon: const Icon(Icons.undo),
-            onPressed: () {
-              ref.read(drawingProvider.notifier).undo();
-            },
-          ),
-          // Temizle butonu
-          IconButton(
-            icon: const Icon(Icons.delete_outline),
-            onPressed: () {
-              ref.read(drawingProvider.notifier).clear();
-            },
-          ),
-        ],
+        title: const Text('AI Çizim'),
       ),
-      body: Row(
+      body: Stack(
         children: [
-          // Sol taraftaki araç çubuğu
-          const SizedBox(
-            width: 80,
-            child: DrawingToolbar(),
-          ),
-          // Sağ taraftaki çizim alanı
-          Expanded(
-            child: Container(
-              color: Colors.grey[200],
-              child: const DrawingCanvas(),
+          const DrawingCanvas(),
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(right: 16.0, bottom: 16.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: const [
+                      AIButton(),
+                    ],
+                  ),
+                ),
+                const DrawingToolbar(),
+              ],
             ),
           ),
         ],

@@ -9,58 +9,54 @@ class DrawingCanvas extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final drawingState = ref.watch(drawingProvider);
-    final size = MediaQuery.of(context).size;
 
-    return Container(
-      width: double.infinity,
-      height: double.infinity,
-      color: Colors.white,
-      child: GestureDetector(
-        onPanStart: (details) {
-          final box = context.findRenderObject() as RenderBox;
-          final offset = box.globalToLocal(details.globalPosition);
-          ref.read(drawingProvider.notifier).startDrawing(offset);
-        },
-        onPanUpdate: (details) {
-          final box = context.findRenderObject() as RenderBox;
-          final offset = box.globalToLocal(details.globalPosition);
-          ref.read(drawingProvider.notifier).addPoint(offset);
-        },
-        onPanEnd: (details) {
-          ref.read(drawingProvider.notifier).endDrawing();
-        },
+    return GestureDetector(
+      onPanStart: (details) {
+        ref.read(drawingProvider.notifier).addPoint(details.localPosition);
+      },
+      onPanUpdate: (details) {
+        ref.read(drawingProvider.notifier).addPoint(details.localPosition);
+      },
+      onPanEnd: (_) {
+        ref.read(drawingProvider.notifier).endLine();
+      },
+      child: RepaintBoundary(
         child: CustomPaint(
-          size: Size(size.width - 80, size.height),
-          painter: DrawingPainter(drawingState.points),
+          painter: _DrawingPainter(drawingState.points),
+          child: Container(
+            width: double.infinity,
+            height: double.infinity,
+            color: Colors.transparent,
+          ),
         ),
       ),
     );
   }
 }
 
-class DrawingPainter extends CustomPainter {
+class _DrawingPainter extends CustomPainter {
   final List<DrawingPoint> points;
 
-  DrawingPainter(this.points);
+  _DrawingPainter(this.points);
 
   @override
   void paint(Canvas canvas, Size size) {
-    canvas.drawRect(
-      Offset.zero & size,
-      Paint()..color = Colors.white,
-    );
+    for (int i = 0; i < points.length - 1; i++) {
+      if (points[i + 1].point == Offset.infinite) continue;
 
-    for (var i = 0; i < points.length - 1; i++) {
       final current = points[i];
       final next = points[i + 1];
 
-      // Eğer next noktası yeni bir çizginin başlangıcıysa, çizgi çizme
-      if (!next.isStartOfLine) {
-        canvas.drawLine(current.offset, next.offset, current.paint);
-      }
+      canvas.drawLine(
+        current.point,
+        next.point,
+        current.paint,
+      );
     }
   }
 
   @override
-  bool shouldRepaint(DrawingPainter oldDelegate) => true;
+  bool shouldRepaint(covariant _DrawingPainter oldDelegate) {
+    return oldDelegate.points != points;
+  }
 }
