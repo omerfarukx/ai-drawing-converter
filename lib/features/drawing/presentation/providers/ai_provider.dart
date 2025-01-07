@@ -2,34 +2,54 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/models/ai_model.dart';
 import '../../domain/models/drawing_points.dart';
 import '../../domain/services/ai_service.dart';
+import 'drawing_provider.dart';
 
-final aiProvider =
-    StateNotifierProvider<AINotifier, AsyncValue<String?>>((ref) {
-  return AINotifier();
+final aiLoadingProvider = StateProvider<bool>((ref) => false);
+
+final aiProvider = StateNotifierProvider<AiNotifier, String?>((ref) {
+  return AiNotifier(ref);
 });
 
-class AINotifier extends StateNotifier<AsyncValue<String?>> {
-  AINotifier() : super(const AsyncValue.data(null));
+class AiNotifier extends StateNotifier<String?> {
+  final Ref _ref;
 
-  Future<String> generateImage(
-    DrawingPoints drawingPoints, {
-    required AIModel model,
-  }) async {
-    state = const AsyncValue.loading();
+  AiNotifier(this._ref) : super(null);
 
+  Future<String> generateImage() async {
     try {
+      _ref.read(aiLoadingProvider.notifier).state = true;
+
+      final drawingState = _ref.read(drawingProvider);
+
+      // AI modeli oluştur
+      final model = AIModel(
+        modelType: AIModelType.realistic,
+        basePrompt: '''
+Transform this sketch into an ultra-realistic photograph. Enhance the sketch with natural lighting, realistic shadows, and fine details. 
+Add depth using professional photography techniques, incorporating realistic textures, materials, and surface details. 
+Ensure the result is indistinguishable from a professional DSLR camera photo, with perfect exposure, vibrant color grading, and a photorealistic finish.
+''',
+      );
+
+      // DrawingPoints oluştur
+      final drawingPoints = DrawingPoints(
+        points: drawingState.points,
+        currentPaint: drawingState.currentPaint,
+      );
+
+      // Çizimi resme dönüştür
       final imageBytes = await drawingPoints.toImage();
-      final base64Image =
-          await AIService.generateImage(imageBytes, model: model);
-      state = AsyncValue.data(base64Image);
-      return base64Image;
-    } catch (error, stackTrace) {
-      state = AsyncValue.error(error, stackTrace);
-      rethrow;
+
+      // AI servisine gönder
+      final imageUrl = await AIService.generateImage(imageBytes, model: model);
+      state = imageUrl;
+      return imageUrl;
+    } finally {
+      _ref.read(aiLoadingProvider.notifier).state = false;
     }
   }
 
   void clearImage() {
-    state = const AsyncValue.data(null);
+    state = null;
   }
 }

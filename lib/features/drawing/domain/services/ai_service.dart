@@ -1,6 +1,9 @@
 import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
+import 'package:path_provider/path_provider.dart';
 import '../models/ai_model.dart';
 
 class AIServiceException implements Exception {
@@ -43,7 +46,21 @@ class AIService {
       });
 
       // Model parametrelerini ekle
-      request.fields.addAll(model.toJson());
+      final modelJson = model.toJson();
+      modelJson['text_prompts'].asMap().forEach((index, prompt) {
+        request.fields['text_prompts[$index][text]'] = prompt['text'];
+        request.fields['text_prompts[$index][weight]'] =
+            prompt['weight'].toString();
+      });
+
+      request.fields['cfg_scale'] = modelJson['cfg_scale'].toString();
+      request.fields['clip_guidance_preset'] =
+          modelJson['clip_guidance_preset'];
+      request.fields['style_preset'] = modelJson['style_preset'];
+      request.fields['samples'] = modelJson['samples'].toString();
+      request.fields['steps'] = modelJson['steps'].toString();
+      request.fields['init_image_mode'] = modelJson['init_image_mode'];
+      request.fields['image_strength'] = modelJson['image_strength'].toString();
 
       // Resmi ekle
       request.files.add(
@@ -51,6 +68,7 @@ class AIService {
           'init_image',
           imageBytes,
           filename: 'drawing.png',
+          contentType: MediaType('image', 'png'),
         ),
       );
 
@@ -63,7 +81,6 @@ class AIService {
       print('Yanıt alındı: ${response.statusCode}');
       print('Yanıt body: ${response.body}');
 
-      // Yanıtı kontrol et
       if (response.statusCode != 200) {
         throw AIServiceException(
           'Resim oluşturulamadı',
@@ -72,7 +89,6 @@ class AIService {
         );
       }
 
-      // Yanıtı parse et
       final jsonResponse = json.decode(response.body);
       final List<dynamic> artifacts = jsonResponse['artifacts'];
 
@@ -80,13 +96,53 @@ class AIService {
         throw AIServiceException('Resim oluşturulamadı: Sonuç boş');
       }
 
-      return artifacts.first['base64'];
+      final resultImage = artifacts.first['base64'];
+      if (resultImage == null || resultImage.isEmpty) {
+        throw AIServiceException('Geçersiz görüntü verisi alındı');
+      }
+
+      try {
+        // Base64'ü doğrula
+        final decodedImage = base64Decode(resultImage);
+        if (decodedImage.isEmpty) {
+          throw AIServiceException('Görüntü verisi boş');
+        }
+
+        // Görüntüyü kaydet
+        final imagePath = await saveImage(resultImage);
+        print('Görüntü kaydedildi: $imagePath');
+
+        return resultImage;
+      } catch (e) {
+        print('Görüntü işleme hatası: $e');
+        throw AIServiceException('Görüntü işlenemedi: ${e.toString()}');
+      }
     } catch (e) {
       print('Hata oluştu: $e');
       if (e is AIServiceException) rethrow;
-      throw AIServiceException(
-        'Beklenmeyen bir hata oluştu: ${e.toString()}',
-      );
+      throw AIServiceException('Beklenmeyen bir hata oluştu: ${e.toString()}');
+    }
+  }
+
+  static Future<String> saveImage(String base64Image) async {
+    try {
+      final bytes = base64Decode(base64Image);
+      final directory = await getApplicationDocumentsDirectory();
+      final imagesDirectory = Directory('${directory.path}/images');
+
+      if (!await imagesDirectory.exists()) {
+        await imagesDirectory.create(recursive: true);
+      }
+
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final filePath = '${imagesDirectory.path}/image_$timestamp.png';
+      final file = File(filePath);
+      await file.writeAsBytes(bytes);
+
+      return filePath;
+    } catch (e) {
+      print('Görsel kaydedilemedi: $e');
+      throw AIServiceException('Görsel kaydedilemedi: ${e.toString()}');
     }
   }
 }

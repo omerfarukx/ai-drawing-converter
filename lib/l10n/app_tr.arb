@@ -1,0 +1,61 @@
+{
+    "appTitle": "AI Çizim",
+    "drawingTab": "Çizim",
+    "galleryTab": "Galeri",
+    "profileTab": "Profil",
+    "settingsTab": "Ayarlar",
+    "save": "Kaydet",
+    "cancel": "İptal",
+    "error": "Hata",
+    "creditPackage10": "10 AI Çizim Kredisi",
+    "creditPackage25": "25 AI Çizim Kredisi",
+    "creditPackage50": "50 AI Çizim Kredisi + 5 Bonus",
+    "purchaseSuccess": "{credits} kredi başarıyla satın alındı!",
+    "@purchaseSuccess": {
+        "placeholders": {
+            "credits": {
+                "type": "int"
+            }
+        }
+    },
+    "purchaseError": "Satın alma işlemi sırasında bir hata oluştu",
+    "allCategories": "Tümü",
+    "noDrawings": "Henüz çizim yok",
+    "remainingCredits": "Kalan Krediler",
+    "credits": "{count} kredi",
+    "@credits": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "watchAdForCredit": "Reklam İzleyerek Kredi Kazan",
+    "watchAdLoading": "Yükleniyor...",
+    "creditPackages": "Kredi Paketleri",
+    "buyNow": "Satın Al",
+    "purchaseConfirmation": "{count} çizim kredisi satın almak istiyor musunuz?",
+    "@purchaseConfirmation": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "delete": "Sil",
+    "deleteConfirmation": "Bu çizimi silmek istediğinize emin misiniz?",
+    "createdAt": "Oluşturulma Tarihi: {date}",
+    "@createdAt": {
+        "placeholders": {
+            "date": {
+                "type": "String"
+            }
+        }
+    },
+    "settings": "Ayarlar",
+    "language": "Dil",
+    "theme": "Tema",
+    "light": "Açık",
+    "dark": "Koyu",
+    "system": "Sistem"
+} 

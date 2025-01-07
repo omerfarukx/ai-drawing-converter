@@ -53,16 +53,16 @@ class DrawingService {
 
       // Uygulama dökümanlar dizinini al
       final appDir = await getApplicationDocumentsDirectory();
-      final drawingsDir = Directory('${appDir.path}/drawings');
+      final imagesDir = Directory('${appDir.path}/images');
 
       // Dizin yoksa oluştur
-      if (!await drawingsDir.exists()) {
-        await drawingsDir.create(recursive: true);
+      if (!await imagesDir.exists()) {
+        await imagesDir.create(recursive: true);
       }
 
       // Dosya adı oluştur
       final fileName = 'drawing_${DateTime.now().millisecondsSinceEpoch}.png';
-      final filePath = '${drawingsDir.path}/$fileName';
+      final filePath = '${imagesDir.path}/$fileName';
 
       // Dosyayı kaydet
       final file = File(filePath);
@@ -76,12 +76,12 @@ class DrawingService {
 
   static Future<String> getDrawingsDirectory() async {
     final appDir = await getApplicationDocumentsDirectory();
-    final drawingsDir = Directory('${appDir.path}/drawings');
+    final imagesDir = Directory('${appDir.path}/images');
 
-    if (!await drawingsDir.exists()) {
-      await drawingsDir.create(recursive: true);
+    if (!await imagesDir.exists()) {
+      await imagesDir.create(recursive: true);
     }
 
-    return drawingsDir.path;
+    return imagesDir.path;
   }
 }

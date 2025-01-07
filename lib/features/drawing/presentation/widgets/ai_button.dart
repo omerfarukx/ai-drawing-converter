@@ -1,73 +1,62 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../domain/models/ai_model.dart';
-import '../../domain/models/drawing_points.dart';
 import '../providers/ai_provider.dart';
-import '../providers/drawing_provider.dart';
+import '../providers/ai_credits_provider.dart';
 import 'ai_result_dialog.dart';
+import 'purchase_dialog.dart';
 
-class AIButton extends ConsumerWidget {
-  const AIButton({super.key});
+class AiButton extends ConsumerWidget {
+  const AiButton({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final aiState = ref.watch(aiProvider);
-    final drawingState = ref.watch(drawingProvider);
+    final isLoading = ref.watch(aiLoadingProvider);
+    final hasCredits = ref.watch(aiCreditsProvider) > 0;
 
     return FloatingActionButton(
-      onPressed: aiState.isLoading || drawingState.points.isEmpty
+      onPressed: isLoading
           ? null
           : () async {
+              if (!hasCredits) {
+                // Kredi yoksa satın alma dialogunu göster
+                if (context.mounted) {
+                  showDialog(
+                    context: context,
+                    builder: (context) => const PurchaseDialog(),
+                  );
+                }
+                return;
+              }
+
               try {
-                final drawingState = ref.read(drawingProvider);
+                // Çizim hakkını kullan
+                await ref.read(aiCreditsProvider.notifier).useCredit();
 
-                // AI modeli oluştur
-                final model = AIModel(
-                  modelType: AIModelType.realistic,
-                  basePrompt: '''
-Transform this sketch into an ultra-realistic photograph. Enhance the sketch with natural lighting, realistic shadows, and fine details. 
-Add depth using professional photography techniques, incorporating realistic textures, materials, and surface details. 
-Ensure the result is indistinguishable from a professional DSLR camera photo, with perfect exposure, vibrant color grading, and a photorealistic finish.
-  ''',
-                );
-
-                // DrawingPoints oluştur
-                final drawingPoints = DrawingPoints(
-                  points: drawingState.points,
-                  currentPaint: drawingState.currentPaint,
-                );
-
-                // Resmi oluştur
+                // AI'ya gönder
                 final imageUrl =
-                    await ref.read(aiProvider.notifier).generateImage(
-                          drawingPoints,
-                          model: model,
-                        );
+                    await ref.read(aiProvider.notifier).generateImage();
 
                 if (context.mounted) {
                   showDialog(
                     context: context,
-                    builder: (context) => AIResultDialog(imageUrl: imageUrl),
+                    builder: (context) => AiResultDialog(imageUrl: imageUrl),
                   );
                 }
               } catch (e) {
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Hata: $e')),
+                    SnackBar(
+                      content: Text('Hata: $e'),
+                    ),
                   );
                 }
               }
             },
-      child: aiState.isLoading
-          ? const SizedBox(
-              width: 24,
-              height: 24,
-              child: CircularProgressIndicator(
-                color: Colors.white,
-                strokeWidth: 2,
-              ),
-            )
-          : const Icon(Icons.auto_awesome),
+      child: isLoading
+          ? const CircularProgressIndicator(color: Colors.white)
+          : !hasCredits
+              ? const Icon(Icons.shopping_cart)
+              : const Icon(Icons.auto_fix_high),
     );
   }
 }

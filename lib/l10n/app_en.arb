@@ -1,0 +1,61 @@
+{
+    "appTitle": "AI Drawing",
+    "drawingTab": "Drawing",
+    "galleryTab": "Gallery",
+    "profileTab": "Profile",
+    "settingsTab": "Settings",
+    "save": "Save",
+    "cancel": "Cancel",
+    "error": "Error",
+    "creditPackage10": "10 AI Drawing Credits",
+    "creditPackage25": "25 AI Drawing Credits",
+    "creditPackage50": "50 AI Drawing Credits + 5 Bonus",
+    "purchaseSuccess": "Successfully purchased {credits} credits!",
+    "@purchaseSuccess": {
+        "placeholders": {
+            "credits": {
+                "type": "int"
+            }
+        }
+    },
+    "purchaseError": "An error occurred during purchase",
+    "allCategories": "All",
+    "noDrawings": "No drawings yet",
+    "remainingCredits": "Remaining Credits",
+    "credits": "{count} credits",
+    "@credits": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "watchAdForCredit": "Watch Ad for Credit",
+    "watchAdLoading": "Loading...",
+    "creditPackages": "Credit Packages",
+    "buyNow": "Buy Now",
+    "purchaseConfirmation": "Do you want to buy {count} drawing credits?",
+    "@purchaseConfirmation": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "delete": "Delete",
+    "deleteConfirmation": "Are you sure you want to delete this drawing?",
+    "createdAt": "Created At: {date}",
+    "@createdAt": {
+        "placeholders": {
+            "date": {
+                "type": "String"
+            }
+        }
+    },
+    "settings": "Settings",
+    "language": "Language",
+    "theme": "Theme",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+} 

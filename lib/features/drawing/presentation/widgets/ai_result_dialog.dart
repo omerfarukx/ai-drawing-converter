@@ -2,49 +2,72 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:share_plus/share_plus.dart';
+import 'package:uuid/uuid.dart';
+import '../../../gallery/domain/models/drawing.dart';
+import '../../../gallery/domain/repositories/gallery_repository.dart';
 import '../providers/ai_provider.dart';
 
-class AIResultDialog extends ConsumerWidget {
+class AiResultDialog extends ConsumerWidget {
   final String imageUrl;
 
-  const AIResultDialog({
+  const AiResultDialog({
     super.key,
     required this.imageUrl,
   });
 
-  Future<void> _shareImage(BuildContext context) async {
+  Future<void> _saveImage(BuildContext context) async {
     try {
       // Base64'ü decode et
-      final imageBytes = base64Decode(imageUrl);
+      final bytes = base64Decode(imageUrl);
 
-      // Geçici dosya oluştur
-      final tempDir = await getTemporaryDirectory();
-      final timestamp = DateTime.now().millisecondsSinceEpoch;
-      final file = File('${tempDir.path}/ai_image_$timestamp.png');
+      // Uygulama dökümanlar dizinini al
+      final appDir = await getApplicationDocumentsDirectory();
+      final imagesDir = Directory('${appDir.path}/images');
 
-      // Dosyaya yaz
-      await file.writeAsBytes(imageBytes);
-
-      if (!await file.exists()) {
-        throw Exception('Dosya oluşturulamadı');
+      // Dizin yoksa oluştur
+      if (!await imagesDir.exists()) {
+        await imagesDir.create(recursive: true);
       }
 
-      // Paylaş
-      await Share.shareFiles(
-        [file.path],
-        text: 'Yapay Zeka ile oluşturulmuş çizimim!',
-        mimeTypes: ['image/png'],
+      // Dosya adı oluştur
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final filePath = '${imagesDir.path}/image_$timestamp.png';
+
+      // Dosyayı kaydet
+      final file = File(filePath);
+      await file.writeAsBytes(bytes);
+
+      // Drawing nesnesini oluştur ve kaydet
+      final drawing = Drawing(
+        id: const Uuid().v4(),
+        path: filePath,
+        createdAt: DateTime.now(),
+        category: 'AI Generated',
+        title: 'AI Drawing',
       );
+
+      // GalleryRepository'ye kaydet
+      final galleryRepository = GalleryRepository();
+      await galleryRepository.saveDrawing(drawing);
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Görsel başarıyla kaydedildi'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        Navigator.pop(context);
+      }
     } catch (e) {
-      debugPrint('Share error: $e');
+      print('Görsel kaydetme hatası: $e');
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Paylaşım hatası: ${e.toString()}'),
+            content: Text('Görsel kaydedilemedi: $e'),
             backgroundColor: Colors.red,
-            duration: const Duration(seconds: 3),
           ),
         );
       }
@@ -53,17 +76,29 @@ class AIResultDialog extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Dialog(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Padding(
             padding: const EdgeInsets.all(16.0),
-            child: Image.memory(
-              base64Decode(imageUrl),
-              fit: BoxFit.contain,
-              width: 300,
-              height: 300,
+            child: AspectRatio(
+              aspectRatio: 1,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.memory(
+                  base64Decode(imageUrl),
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    print('Görüntü yükleme hatası: $error');
+                    return const Center(
+                      child: Icon(Icons.error, color: Colors.red, size: 48),
+                    );
+                  },
+                ),
+              ),
             ),
           ),
           ButtonBar(
@@ -71,21 +106,13 @@ class AIResultDialog extends ConsumerWidget {
               TextButton(
                 onPressed: () {
                   ref.read(aiProvider.notifier).clearImage();
-                  Navigator.of(context).pop();
+                  Navigator.pop(context);
                 },
-                child: const Text('Kapat'),
-              ),
-              IconButton(
-                onPressed: () => _shareImage(context),
-                icon: const Icon(Icons.share),
-                tooltip: 'Paylaş',
+                child: Text(l10n.cancel),
               ),
               FilledButton(
-                onPressed: () {
-                  // TODO: Save image
-                  Navigator.of(context).pop();
-                },
-                child: const Text('Kaydet'),
+                onPressed: () => _saveImage(context),
+                child: Text(l10n.save),
               ),
             ],
           ),
