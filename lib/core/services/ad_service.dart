@@ -39,13 +39,22 @@ class AdService {
   }
 
   static Future<void> initialize() async {
-    if (kDebugMode) {
+    try {
+      await MobileAds.instance.initialize();
+
       // Test cihazlarını ekle
       MobileAds.instance.updateRequestConfiguration(
-        RequestConfiguration(testDeviceIds: ['TEST_DEVICE_ID']),
+        RequestConfiguration(
+          testDeviceIds: [
+            'A0AA71D9199936B8F36B1A1036B94845'
+          ], // Test cihaz ID'si
+        ),
       );
+
+      debugPrint('Mobile Ads initialized successfully');
+    } catch (e) {
+      debugPrint('Error initializing Mobile Ads: $e');
     }
-    await MobileAds.instance.initialize();
   }
 
   static Future<BannerAd> createBannerAd() async {
@@ -101,22 +110,35 @@ class AdService {
     required Function(RewardItem reward) onUserEarnedReward,
   }) async {
     try {
-      final completer = Completer<RewardedAd>();
+      final completer = Completer<RewardedAd?>();
 
-      RewardedAd.load(
-        adUnitId: rewardedAdUnitId,
+      // Test reklamı ID'sini kullan
+      final adUnitId = 'ca-app-pub-3940256099942544/5224354917';
+
+      await RewardedAd.load(
+        adUnitId: adUnitId,
         request: const AdRequest(),
         rewardedAdLoadCallback: RewardedAdLoadCallback(
           onAdLoaded: (ad) {
+            debugPrint('Rewarded ad loaded successfully');
+
             ad.fullScreenContentCallback = FullScreenContentCallback(
               onAdDismissedFullScreenContent: (ad) {
+                debugPrint('Rewarded ad dismissed');
                 ad.dispose();
               },
               onAdFailedToShowFullScreenContent: (ad, error) {
-                ad.dispose();
                 debugPrint('Rewarded ad failed to show: $error');
+                ad.dispose();
+              },
+              onAdShowedFullScreenContent: (ad) {
+                debugPrint('Rewarded ad showed fullscreen content');
+              },
+              onAdImpression: (ad) {
+                debugPrint('Rewarded ad impression recorded');
               },
             );
+
             completer.complete(ad);
           },
           onAdFailedToLoad: (error) {
@@ -130,6 +152,26 @@ class AdService {
     } catch (e) {
       debugPrint('Error loading rewarded ad: $e');
       return null;
+    }
+  }
+
+  static Future<bool> showRewardedAd(
+    RewardedAd ad, {
+    required Function(RewardItem reward) onUserEarnedReward,
+  }) async {
+    try {
+      final completer = Completer<bool>();
+
+      ad.show(onUserEarnedReward: (_, reward) {
+        debugPrint('User earned reward of ${reward.amount} ${reward.type}');
+        onUserEarnedReward(reward);
+        completer.complete(true);
+      });
+
+      return await completer.future;
+    } catch (e) {
+      debugPrint('Error showing rewarded ad: $e');
+      return false;
     }
   }
 

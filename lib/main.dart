@@ -12,19 +12,78 @@ import 'features/profile/presentation/pages/profile_page.dart';
 import 'core/services/user_service.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  try {
+    WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize services
-  final userService = UserService();
-  await userService.initialize();
-  await userService.checkFirstLogin();
-  await AdService.initialize();
+    // Initialize services with error handling
+    try {
+      final userService = UserService();
+      await userService.initialize();
+      await userService.checkFirstLogin();
+    } catch (e) {
+      print('UserService başlatma hatası: $e');
+      // Continue execution even if UserService fails
+    }
 
-  runApp(
-    const ProviderScope(
-      child: MyApp(),
-    ),
-  );
+    try {
+      await AdService.initialize();
+    } catch (e) {
+      print('AdService başlatma hatası: $e');
+      // Continue execution even if AdService fails
+    }
+
+    runApp(
+      const ProviderScope(
+        child: MyApp(),
+      ),
+    );
+  } catch (e, stackTrace) {
+    print('Kritik uygulama hatası: $e');
+    print('Stack trace: $stackTrace');
+
+    runApp(
+      MaterialApp(
+        home: Scaffold(
+          body: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.error_outline,
+                    color: Colors.red,
+                    size: 48,
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Uygulama başlatılamadı',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Hata: $e',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: Colors.red),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () {
+                      main();
+                    },
+                    child: const Text('Tekrar Dene'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class MyApp extends ConsumerWidget {
