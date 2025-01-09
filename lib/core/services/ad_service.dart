@@ -11,11 +11,18 @@ class AdService {
   static DateTime? _lastAdReset;
   static final PurchaseService _purchaseService = PurchaseService();
 
+  // Önbelleğe alınmış reklamlar
+  static RewardedAd? _cachedRewardedAd;
+  static bool _isLoadingRewardedAd = false;
+  static DateTime? _lastRewardedAdLoadTime;
+
   static String get bannerAdUnitId {
     if (Platform.isAndroid) {
-      return 'ca-app-pub-4716033743179769/5155288635'; // Gerçek Banner ID
+      return kDebugMode
+          ? 'ca-app-pub-3940256099942544/6300978111' // Test ID
+          : 'ca-app-pub-4716033743179769/5155288635'; // Gerçek ID
     } else if (Platform.isIOS) {
-      return 'ca-app-pub-3940256099942544/2934735716'; // Test ID (iOS için henüz gerçek ID yok)
+      return 'ca-app-pub-3940256099942544/2934735716';
     }
     throw UnsupportedError('Desteklenmeyen platform');
   }
@@ -31,9 +38,11 @@ class AdService {
 
   static String get rewardedAdUnitId {
     if (Platform.isAndroid) {
-      return 'ca-app-pub-4716033743179769/8636440475'; // Gerçek Rewarded ID
+      return kDebugMode
+          ? 'ca-app-pub-3940256099942544/5224354917' // Test ID
+          : 'ca-app-pub-4716033743179769/8636440475'; // Gerçek ID
     } else if (Platform.isIOS) {
-      return 'ca-app-pub-3940256099942544/1712485313'; // Test ID (iOS için henüz gerçek ID yok)
+      return 'ca-app-pub-3940256099942544/1712485313';
     }
     throw UnsupportedError('Desteklenmeyen platform');
   }
@@ -41,19 +50,56 @@ class AdService {
   static Future<void> initialize() async {
     try {
       await MobileAds.instance.initialize();
-
-      // Test cihazlarını ekle
-      MobileAds.instance.updateRequestConfiguration(
-        RequestConfiguration(
-          testDeviceIds: [
-            'A0AA71D9199936B8F36B1A1036B94845'
-          ], // Test cihaz ID'si
-        ),
-      );
-
+      // İlk reklamı önceden yükle
+      _preloadRewardedAd();
       debugPrint('Mobile Ads initialized successfully');
     } catch (e) {
       debugPrint('Error initializing Mobile Ads: $e');
+    }
+  }
+
+  // Ödüllü reklamı önceden yükle
+  static Future<void> _preloadRewardedAd() async {
+    if (_isLoadingRewardedAd || _cachedRewardedAd != null) return;
+
+    _isLoadingRewardedAd = true;
+    try {
+      await RewardedAd.load(
+        adUnitId: rewardedAdUnitId,
+        request: const AdRequest(),
+        rewardedAdLoadCallback: RewardedAdLoadCallback(
+          onAdLoaded: (ad) {
+            _cachedRewardedAd = ad;
+            _lastRewardedAdLoadTime = DateTime.now();
+            _isLoadingRewardedAd = false;
+            debugPrint('Rewarded ad preloaded successfully');
+
+            ad.fullScreenContentCallback = FullScreenContentCallback(
+              onAdDismissedFullScreenContent: (ad) {
+                ad.dispose();
+                _cachedRewardedAd = null;
+                _preloadRewardedAd(); // Yeni reklam yükle
+                debugPrint('Rewarded ad dismissed');
+              },
+              onAdFailedToShowFullScreenContent: (ad, error) {
+                ad.dispose();
+                _cachedRewardedAd = null;
+                _preloadRewardedAd(); // Yeni reklam yükle
+                debugPrint('Rewarded ad failed to show: $error');
+              },
+            );
+          },
+          onAdFailedToLoad: (error) {
+            debugPrint('Failed to preload rewarded ad: $error');
+            _isLoadingRewardedAd = false;
+            // 1 dakika sonra tekrar dene
+            Future.delayed(const Duration(minutes: 1), _preloadRewardedAd);
+          },
+        ),
+      );
+    } catch (e) {
+      debugPrint('Error preloading rewarded ad: $e');
+      _isLoadingRewardedAd = false;
     }
   }
 
@@ -109,14 +155,20 @@ class AdService {
   static Future<RewardedAd?> loadRewardedAd({
     required Function(RewardItem reward) onUserEarnedReward,
   }) async {
+    // Önbellekteki reklamı kontrol et
+    if (_cachedRewardedAd != null) {
+      final timeSinceLoad = DateTime.now().difference(_lastRewardedAdLoadTime!);
+      if (timeSinceLoad.inHours < 1) {
+        // 1 saatten eskiyse yeni reklam yükle
+        return _cachedRewardedAd;
+      }
+    }
+
     try {
       final completer = Completer<RewardedAd?>();
 
-      // Test reklamı ID'sini kullan
-      final adUnitId = 'ca-app-pub-3940256099942544/5224354917';
-
       await RewardedAd.load(
-        adUnitId: adUnitId,
+        adUnitId: rewardedAdUnitId,
         request: const AdRequest(),
         rewardedAdLoadCallback: RewardedAdLoadCallback(
           onAdLoaded: (ad) {
@@ -126,16 +178,12 @@ class AdService {
               onAdDismissedFullScreenContent: (ad) {
                 debugPrint('Rewarded ad dismissed');
                 ad.dispose();
+                _preloadRewardedAd(); // Yeni reklam yükle
               },
               onAdFailedToShowFullScreenContent: (ad, error) {
                 debugPrint('Rewarded ad failed to show: $error');
                 ad.dispose();
-              },
-              onAdShowedFullScreenContent: (ad) {
-                debugPrint('Rewarded ad showed fullscreen content');
-              },
-              onAdImpression: (ad) {
-                debugPrint('Rewarded ad impression recorded');
+                _preloadRewardedAd(); // Yeni reklam yükle
               },
             );
 
@@ -144,6 +192,7 @@ class AdService {
           onAdFailedToLoad: (error) {
             debugPrint('Rewarded ad failed to load: $error');
             completer.complete(null);
+            _preloadRewardedAd(); // Yeni reklam yüklemeyi dene
           },
         ),
       );
