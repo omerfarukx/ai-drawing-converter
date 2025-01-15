@@ -9,7 +9,7 @@
     <application
         android:name=".MainApplication"
         android:label="AI Çizim"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@mipmap/launcher_icon"
         android:usesCleartextTraffic="true"
         android:allowBackup="true"
         android:fullBackupContent="true">

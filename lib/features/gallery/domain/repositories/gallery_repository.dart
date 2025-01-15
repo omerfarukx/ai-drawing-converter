@@ -6,11 +6,16 @@ import '../models/drawing.dart';
 
 class GalleryRepository {
   static const String _drawingsKey = 'drawings';
-  final _prefs = SharedPreferences.getInstance();
+  SharedPreferences? _prefs;
+
+  Future<SharedPreferences> get prefs async {
+    _prefs ??= await SharedPreferences.getInstance();
+    return _prefs!;
+  }
 
   Future<List<Drawing>> getDrawings() async {
-    final prefs = await _prefs;
-    final drawingsJson = prefs.getStringList(_drawingsKey) ?? [];
+    final preferences = await prefs;
+    final drawingsJson = preferences.getStringList(_drawingsKey) ?? [];
     return drawingsJson
         .map((json) =>
             Drawing.fromJson(jsonDecode(json) as Map<String, dynamic>))
@@ -18,15 +23,15 @@ class GalleryRepository {
   }
 
   Future<void> saveDrawing(Drawing drawing) async {
-    final prefs = await _prefs;
+    final preferences = await prefs;
     final drawings = await getDrawings();
     drawings.add(drawing);
-    await prefs.setStringList(
+    await preferences.setStringList(
         _drawingsKey, drawings.map((d) => jsonEncode(d.toJson())).toList());
   }
 
   Future<void> deleteDrawing(String id) async {
-    final prefs = await _prefs;
+    final preferences = await prefs;
     final drawings = await getDrawings();
     final drawing = drawings.firstWhere((d) => d.id == id);
 
@@ -38,17 +43,17 @@ class GalleryRepository {
 
     // Veritabanından kaldır
     drawings.removeWhere((d) => d.id == id);
-    await prefs.setStringList(
+    await preferences.setStringList(
         _drawingsKey, drawings.map((d) => jsonEncode(d.toJson())).toList());
   }
 
   Future<void> updateDrawing(Drawing drawing) async {
-    final prefs = await _prefs;
+    final preferences = await prefs;
     final drawings = await getDrawings();
     final index = drawings.indexWhere((d) => d.id == drawing.id);
     if (index != -1) {
       drawings[index] = drawing;
-      await prefs.setStringList(
+      await preferences.setStringList(
           _drawingsKey, drawings.map((d) => jsonEncode(d.toJson())).toList());
     }
   }

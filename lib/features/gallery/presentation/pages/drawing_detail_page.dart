@@ -43,12 +43,29 @@ class DrawingDetailPage extends ConsumerWidget {
                     ),
                     TextButton(
                       onPressed: () async {
-                        await ref
-                            .read(galleryRepositoryProvider)
-                            .deleteDrawing(drawing.id);
-                        if (context.mounted) {
-                          Navigator.pop(context); // Dialog'u kapat
-                          Navigator.pop(context); // Detay sayfasını kapat
+                        try {
+                          await ref
+                              .read(galleryRepositoryProvider)
+                              .deleteDrawing(drawing.id);
+
+                          // Provider'ları yenile
+                          ref.invalidate(drawingsProvider);
+                          ref.invalidate(categoriesProvider);
+                          ref.invalidate(filteredDrawingsProvider);
+
+                          if (context.mounted) {
+                            Navigator.pop(context); // Dialog'u kapat
+                            Navigator.pop(context); // Detay sayfasını kapat
+                          }
+                        } catch (e) {
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(l10n.error),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          }
                         }
                       },
                       child: Text(l10n.delete),

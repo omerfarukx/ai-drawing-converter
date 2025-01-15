@@ -85,7 +85,7 @@ Refine this sketch with clean, sharp lines and enhanced details. Maintain its ra
       'samples': 1,
       'steps': 50,
       'init_image_mode': 'IMAGE_STRENGTH',
-      'image_strength': 0.05, // bunu elleme sakın
+      'image_strength': 0.25, // bunu elleme sakın
     };
   }
 }
