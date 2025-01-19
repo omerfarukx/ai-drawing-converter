@@ -27,4 +27,9 @@ class LocaleNotifier extends StateNotifier<Locale> {
     await prefs.setString(_localeKey, languageCode);
     state = Locale(languageCode);
   }
+
+  Future<void> toggleLocale() async {
+    final newLocale = state.languageCode == 'tr' ? 'en' : 'tr';
+    await setLocale(newLocale);
+  }
 }

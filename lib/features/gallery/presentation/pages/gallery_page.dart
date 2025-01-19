@@ -13,66 +13,136 @@ class GalleryPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
-    final drawingsAsyncValue = ref.watch(galleryProvider);
-    final selectedCategory = ref.watch(selectedCategoryProvider);
+    final drawingsAsync = ref.watch(galleryProvider);
+    final categories = ref.watch(categoriesProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.galleryTab),
-      ),
-      body: Column(
-        children: [
-          // Kategori filtresi
-          SizedBox(
-            height: 50,
-            child: ref.watch(categoriesProvider).when(
-                  data: (categories) => ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: categories.length + 1,
-                    itemBuilder: (context, index) {
-                      final category =
-                          index == 0 ? 'Tümü' : categories[index - 1];
-                      final isSelected = selectedCategory == category;
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 4),
-                        child: FilterChip(
-                          selected: isSelected,
-                          label: Text(category),
-                          onSelected: (_) {
-                            ref.read(selectedCategoryProvider.notifier).state =
-                                category == 'Tümü' ? null : category;
-                          },
-                        ),
-                      );
-                    },
-                  ),
+      backgroundColor: const Color(0xFF1A1A2E),
+      body: CustomScrollView(
+        physics: const BouncingScrollPhysics(),
+        slivers: [
+          SliverAppBar.medium(
+            title: Text(l10n.galleryTab),
+            backgroundColor: Colors.transparent,
+            foregroundColor: Colors.white,
+            centerTitle: true,
+            elevation: 0,
+            pinned: true,
+            bottom: PreferredSize(
+              preferredSize: const Size.fromHeight(60),
+              child: Container(
+                height: 60,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: categories.when(
+                  data: (categoryList) {
+                    return ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: categoryList.length,
+                      itemBuilder: (context, index) {
+                        final category = categoryList[index];
+                        final isSelected =
+                            ref.watch(selectedCategoryProvider) == category;
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: FilterChip(
+                            label: Text(category),
+                            selected: isSelected,
+                            onSelected: (selected) {
+                              ref
+                                  .read(selectedCategoryProvider.notifier)
+                                  .state = selected ? category : null;
+                            },
+                            backgroundColor: const Color(0xFF16213E),
+                            selectedColor: const Color(0xFF533483),
+                            checkmarkColor: Colors.white,
+                            labelStyle: TextStyle(
+                              color: isSelected
+                                  ? Colors.white
+                                  : Colors.white.withOpacity(0.7),
+                              fontSize: 14,
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 8),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                              side: BorderSide(
+                                color: isSelected
+                                    ? Colors.transparent
+                                    : Colors.white.withOpacity(0.1),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    );
+                  },
                   loading: () =>
                       const Center(child: CircularProgressIndicator()),
-                  error: (error, _) => Center(child: Text('Hata: $error')),
+                  error: (error, stack) => Center(child: Text('Error: $error')),
                 ),
+              ),
+            ),
           ),
-          // Çizim listesi
-          Expanded(
-            child: drawingsAsyncValue.when(
-              data: (drawings) => drawings.isEmpty
-                  ? const Center(child: Text('Henüz çizim yok'))
-                  : GridView.builder(
-                      padding: const EdgeInsets.all(8),
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        childAspectRatio: 0.75,
-                        crossAxisSpacing: 8,
-                        mainAxisSpacing: 8,
-                      ),
-                      itemCount: drawings.length,
-                      itemBuilder: (context, index) {
-                        final drawing = drawings[index];
-                        return _DrawingCard(drawing: drawing);
-                      },
+          drawingsAsync.when(
+            data: (drawings) {
+              if (drawings.isEmpty) {
+                return SliverFillRemaining(
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.image_not_supported_outlined,
+                          size: 64,
+                          color: Colors.white.withOpacity(0.5),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          l10n.noDrawings,
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.7),
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
                     ),
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, _) => Center(child: Text('Hata: $error')),
+                  ),
+                );
+              }
+
+              return SliverPadding(
+                padding: const EdgeInsets.all(16),
+                sliver: SliverGrid(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    mainAxisSpacing: 16,
+                    crossAxisSpacing: 16,
+                    childAspectRatio: 1,
+                  ),
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) {
+                      final drawing = drawings[index];
+                      return _DrawingCard(drawing: drawing);
+                    },
+                    childCount: drawings.length,
+                  ),
+                ),
+              );
+            },
+            loading: () => const SliverFillRemaining(
+              child: Center(
+                child: CircularProgressIndicator(
+                  color: Color(0xFF533483),
+                ),
+              ),
+            ),
+            error: (error, stack) => SliverFillRemaining(
+              child: Center(
+                child: Text(
+                  'Error: $error',
+                  style: const TextStyle(color: Colors.white),
+                ),
+              ),
             ),
           ),
         ],
@@ -88,63 +158,73 @@ class _DrawingCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => DrawingDetailPage(id: drawing.id),
-            ),
-          );
-        },
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Image.file(
-                File(drawing.path),
-                width: double.infinity,
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => DrawingDetailPage(id: drawing.id),
+          ),
+        );
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          gradient: const LinearGradient(
+            colors: [Color(0xFF16213E), Color(0xFF1A1A2E)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          border: Border.all(
+            color: Colors.white.withOpacity(0.1),
+            width: 1,
+          ),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              Image.asset(
+                drawing.path,
                 fit: BoxFit.cover,
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    drawing.title,
-                    style: Theme.of(context).textTheme.titleMedium,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+              if (drawing.isAIGenerated)
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF533483).withOpacity(0.8),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.auto_awesome,
+                          color: Colors.white,
+                          size: 12,
+                        ),
+                        SizedBox(width: 4),
+                        Text(
+                          'AI',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      Icon(
-                        drawing.category == 'AI'
-                            ? Icons.auto_awesome
-                            : Icons.brush,
-                        size: 16,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        drawing.category,
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                      const Spacer(),
-                      Text(
-                        drawing.createdAt.toString().split(' ')[0],
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
+                ),
+            ],
+          ),
         ),
       ),
     );
