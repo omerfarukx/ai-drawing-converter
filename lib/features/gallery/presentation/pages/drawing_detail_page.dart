@@ -1,126 +1,190 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:share_plus/share_plus.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:image_gallery_saver/image_gallery_saver.dart';
 import '../../domain/models/drawing.dart';
-import '../providers/gallery_provider.dart';
+import '../../domain/repositories/gallery_repository.dart';
 
 class DrawingDetailPage extends ConsumerWidget {
-  final Drawing drawing;
+  final String id;
 
   const DrawingDetailPage({
-    super.key,
-    required this.drawing,
-  });
+    Key? key,
+    required this.id,
+  }) : super(key: key);
+
+  Future<void> _downloadImage(BuildContext context, String imagePath) async {
+    try {
+      // Dosyayı oku
+      final file = File(imagePath);
+      if (!await file.exists()) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Görsel bulunamadı')),
+          );
+        }
+        return;
+      }
+
+      final bytes = await file.readAsBytes();
+
+      // Galeriye kaydet
+      final result = await ImageGallerySaver.saveImage(
+        bytes,
+        quality: 100,
+        name: 'AI_Drawing_${DateTime.now().millisecondsSinceEpoch}',
+      );
+
+      if (context.mounted) {
+        if (result['isSuccess']) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Görsel galeriye kaydedildi')),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Görsel kaydedilemedi')),
+          );
+        }
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Hata: $e')),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context)!;
-
     return Scaffold(
       appBar: AppBar(
-        title: Text(drawing.title ?? l10n.appTitle),
+        title: const Text('Çizim Detayı'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.share),
-            onPressed: () {
-              Share.shareXFiles([XFile(drawing.path)]);
+            icon: const Icon(Icons.download),
+            onPressed: () async {
+              final drawing =
+                  await ref.read(galleryRepositoryProvider).getDrawingById(id);
+              if (drawing != null) {
+                if (context.mounted) {
+                  await _downloadImage(context, drawing.path);
+                }
+              }
             },
           ),
           IconButton(
             icon: const Icon(Icons.delete),
-            onPressed: () {
-              showDialog(
+            onPressed: () async {
+              final confirmed = await showDialog<bool>(
                 context: context,
                 builder: (context) => AlertDialog(
-                  title: Text(l10n.delete),
-                  content: Text(l10n.deleteConfirmation),
+                  title: const Text('Çizimi Sil'),
+                  content:
+                      const Text('Bu çizimi silmek istediğinize emin misiniz?'),
                   actions: [
                     TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: Text(l10n.cancel),
+                      onPressed: () => Navigator.pop(context, false),
+                      child: const Text('İptal'),
                     ),
                     TextButton(
-                      onPressed: () async {
-                        try {
-                          await ref
-                              .read(galleryRepositoryProvider)
-                              .deleteDrawing(drawing.id);
-
-                          // Provider'ları yenile
-                          ref.invalidate(drawingsProvider);
-                          ref.invalidate(categoriesProvider);
-                          ref.invalidate(filteredDrawingsProvider);
-
-                          if (context.mounted) {
-                            Navigator.pop(context); // Dialog'u kapat
-                            Navigator.pop(context); // Detay sayfasını kapat
-                          }
-                        } catch (e) {
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(l10n.error),
-                                backgroundColor: Colors.red,
-                              ),
-                            );
-                          }
-                        }
-                      },
-                      child: Text(l10n.delete),
+                      onPressed: () => Navigator.pop(context, true),
+                      child: const Text('Sil'),
                     ),
                   ],
                 ),
               );
+
+              if (confirmed == true && context.mounted) {
+                try {
+                  await ref.read(galleryRepositoryProvider).deleteDrawing(id);
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Çizim silindi'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                    Navigator.pop(context);
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Hata: $e'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                }
+              }
             },
+            tooltip: 'Sil',
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            AspectRatio(
-              aspectRatio: 1,
-              child: Image.file(
-                File(drawing.path),
-                fit: BoxFit.contain,
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (drawing.title != null) ...[
-                    Text(
-                      drawing.title!,
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                    const SizedBox(height: 8),
-                  ],
-                  if (drawing.description != null) ...[
-                    Text(
-                      drawing.description!,
-                      style: Theme.of(context).textTheme.bodyLarge,
-                    ),
-                    const SizedBox(height: 16),
-                  ],
-                  Chip(
-                    label: Text(drawing.category),
+      body: FutureBuilder<Drawing?>(
+        future: ref.read(galleryRepositoryProvider).getDrawingById(id),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (snapshot.hasError) {
+            return Center(child: Text('Hata: ${snapshot.error}'));
+          }
+
+          final drawing = snapshot.data;
+          if (drawing == null) {
+            return const Center(child: Text('Çizim bulunamadı'));
+          }
+
+          return SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Image.file(
+                  File(drawing.path),
+                  width: double.infinity,
+                  fit: BoxFit.contain,
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        drawing.title,
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        drawing.description,
+                        style: Theme.of(context).textTheme.bodyLarge,
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          const Icon(Icons.category),
+                          const SizedBox(width: 8),
+                          Text(drawing.category),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          const Icon(Icons.calendar_today),
+                          const SizedBox(width: 8),
+                          Text(drawing.createdAt.toString().split(' ')[0]),
+                        ],
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    l10n.createdAt(
-                        drawing.createdAt.toLocal().toString().split('.')[0]),
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }

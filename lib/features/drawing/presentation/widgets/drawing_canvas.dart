@@ -12,21 +12,28 @@ class DrawingCanvas extends ConsumerWidget {
 
     return GestureDetector(
       onPanStart: (details) {
-        ref.read(drawingProvider.notifier).addPoint(details.localPosition);
+        final box = context.findRenderObject() as RenderBox;
+        final point = box.globalToLocal(details.globalPosition);
+        ref.read(drawingProvider.notifier).startLine(point);
       },
       onPanUpdate: (details) {
-        ref.read(drawingProvider.notifier).addPoint(details.localPosition);
+        final box = context.findRenderObject() as RenderBox;
+        final point = box.globalToLocal(details.globalPosition);
+        ref.read(drawingProvider.notifier).addPoint(point);
       },
       onPanEnd: (_) {
         ref.read(drawingProvider.notifier).endLine();
       },
       child: RepaintBoundary(
-        child: CustomPaint(
-          painter: _DrawingPainter(drawingState.points),
-          child: Container(
-            width: double.infinity,
-            height: double.infinity,
-            color: Colors.transparent,
+        child: Container(
+          width: double.infinity,
+          height: double.infinity,
+          color: Colors.white,
+          child: CustomPaint(
+            painter: _DrawingPainter(
+              lines: drawingState.lines,
+              currentLine: drawingState.currentLine,
+            ),
           ),
         ),
       ),
@@ -35,17 +42,32 @@ class DrawingCanvas extends ConsumerWidget {
 }
 
 class _DrawingPainter extends CustomPainter {
-  final List<DrawingPoint> points;
+  final List<List<DrawingPoint>> lines;
+  final List<DrawingPoint> currentLine;
 
-  _DrawingPainter(this.points);
+  _DrawingPainter({
+    required this.lines,
+    required this.currentLine,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
-    for (int i = 0; i < points.length - 1; i++) {
-      if (points[i + 1].point == Offset.infinite) continue;
+    // Önceki çizgileri çiz
+    for (final line in lines) {
+      if (line.isEmpty) continue;
+      _drawLine(canvas, line);
+    }
 
-      final current = points[i];
-      final next = points[i + 1];
+    // Şu anki çizgiyi çiz
+    if (currentLine.isNotEmpty) {
+      _drawLine(canvas, currentLine);
+    }
+  }
+
+  void _drawLine(Canvas canvas, List<DrawingPoint> line) {
+    for (int i = 0; i < line.length - 1; i++) {
+      final current = line[i];
+      final next = line[i + 1];
 
       canvas.drawLine(
         current.point,
@@ -57,6 +79,6 @@ class _DrawingPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _DrawingPainter oldDelegate) {
-    return oldDelegate.points != points;
+    return oldDelegate.lines != lines || oldDelegate.currentLine != currentLine;
   }
 }

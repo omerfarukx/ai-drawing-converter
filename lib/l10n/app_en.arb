@@ -57,5 +57,11 @@
     "theme": "Theme",
     "light": "Light",
     "dark": "Dark",
-    "system": "System"
+    "system": "System",
+    "undo": "Undo",
+    "redo": "Redo",
+    "clear": "Clear",
+    "changeColor": "Change Color",
+    "brushSettings": "Brush Settings",
+    "brushSize": "Brush Size"
 } 

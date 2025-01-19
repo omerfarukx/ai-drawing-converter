@@ -57,5 +57,11 @@
     "theme": "Tema",
     "light": "Açık",
     "dark": "Koyu",
-    "system": "Sistem"
+    "system": "Sistem",
+    "undo": "Geri Al",
+    "redo": "İleri Al",
+    "clear": "Temizle",
+    "changeColor": "Renk Değiştir",
+    "brushSettings": "Fırça Ayarları",
+    "brushSize": "Fırça Boyutu"
 } 

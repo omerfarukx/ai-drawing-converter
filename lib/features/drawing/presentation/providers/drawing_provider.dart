@@ -2,45 +2,219 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/models/drawing_point.dart';
 
-enum BrushType {
-  normal,
-  soft,
-  square,
-  calligraphy,
-}
-
 class DrawingState {
-  final List<DrawingPoint> points;
-  final Paint currentPaint;
-  final bool isErasing;
-  final double strokeWidth;
+  final List<DrawingPoint> currentLine;
+  final List<List<DrawingPoint>> lines;
+  final List<List<List<DrawingPoint>>> history;
+  final int historyIndex;
+  final Color currentColor;
   final Color selectedColor;
-  final BrushType brushType;
+  final double strokeWidth;
+  final bool isErasing;
+  final Paint currentPaint;
 
   const DrawingState({
-    required this.points,
-    required this.currentPaint,
-    required this.isErasing,
-    required this.strokeWidth,
+    required this.currentLine,
+    required this.lines,
+    required this.history,
+    required this.historyIndex,
+    required this.currentColor,
     required this.selectedColor,
-    required this.brushType,
+    required this.strokeWidth,
+    required this.isErasing,
+    required this.currentPaint,
   });
 
+  bool get canUndo => historyIndex > 0;
+  bool get canRedo => historyIndex < history.length - 1;
+
+  List<DrawingPoint> get allPoints {
+    final List<DrawingPoint> all = [];
+    for (var line in lines) {
+      all.addAll(line);
+    }
+    all.addAll(currentLine);
+    return all;
+  }
+
   DrawingState copyWith({
-    List<DrawingPoint>? points,
-    Paint? currentPaint,
-    bool? isErasing,
-    double? strokeWidth,
+    List<DrawingPoint>? currentLine,
+    List<List<DrawingPoint>>? lines,
+    List<List<List<DrawingPoint>>>? history,
+    int? historyIndex,
+    Color? currentColor,
     Color? selectedColor,
-    BrushType? brushType,
+    double? strokeWidth,
+    bool? isErasing,
+    Paint? currentPaint,
   }) {
     return DrawingState(
-      points: points ?? this.points,
-      currentPaint: currentPaint ?? this.currentPaint,
-      isErasing: isErasing ?? this.isErasing,
-      strokeWidth: strokeWidth ?? this.strokeWidth,
+      currentLine: currentLine ?? this.currentLine,
+      lines: lines ?? this.lines,
+      history: history ?? this.history,
+      historyIndex: historyIndex ?? this.historyIndex,
+      currentColor: currentColor ?? this.currentColor,
       selectedColor: selectedColor ?? this.selectedColor,
-      brushType: brushType ?? this.brushType,
+      strokeWidth: strokeWidth ?? this.strokeWidth,
+      isErasing: isErasing ?? this.isErasing,
+      currentPaint: currentPaint ?? this.currentPaint,
+    );
+  }
+}
+
+class DrawingNotifier extends StateNotifier<DrawingState> {
+  DrawingNotifier()
+      : super(DrawingState(
+          currentLine: [],
+          lines: [],
+          history: [[]],
+          historyIndex: 0,
+          currentColor: Colors.black,
+          selectedColor: Colors.black,
+          strokeWidth: 2.0,
+          isErasing: false,
+          currentPaint: Paint()
+            ..color = Colors.black
+            ..strokeWidth = 2.0
+            ..strokeCap = StrokeCap.round
+            ..strokeJoin = StrokeJoin.round
+            ..style = PaintingStyle.stroke,
+        ));
+
+  void startLine(Offset point) {
+    final paint = Paint()
+      ..color = state.isErasing ? Colors.white : state.currentColor
+      ..strokeWidth = state.strokeWidth
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round
+      ..style = PaintingStyle.stroke;
+
+    final newPoint = DrawingPoint(
+      point: point,
+      paint: paint,
+      pressure: 1.0,
+    );
+
+    state = state.copyWith(
+      currentLine: [newPoint],
+      currentPaint: paint,
+    );
+  }
+
+  void addPoint(Offset point) {
+    if (state.currentLine.isEmpty) return;
+
+    final paint = Paint()
+      ..color = state.isErasing ? Colors.white : state.currentColor
+      ..strokeWidth = state.strokeWidth
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round
+      ..style = PaintingStyle.stroke;
+
+    final newPoint = DrawingPoint(
+      point: point,
+      paint: paint,
+      pressure: 1.0,
+    );
+
+    state = state.copyWith(
+      currentLine: [...state.currentLine, newPoint],
+      currentPaint: paint,
+    );
+  }
+
+  void endLine() {
+    if (state.currentLine.isEmpty) return;
+
+    final newLines = [...state.lines, state.currentLine];
+    final newHistory = [
+      ...state.history.sublist(0, state.historyIndex + 1),
+      newLines
+    ];
+
+    state = state.copyWith(
+      currentLine: [],
+      lines: newLines,
+      history: newHistory,
+      historyIndex: state.historyIndex + 1,
+    );
+  }
+
+  void undo() {
+    if (!state.canUndo) return;
+
+    final previousLines = state.history[state.historyIndex - 1];
+    state = state.copyWith(
+      currentLine: [],
+      lines: previousLines,
+      historyIndex: state.historyIndex - 1,
+    );
+  }
+
+  void redo() {
+    if (!state.canRedo) return;
+
+    final nextLines = state.history[state.historyIndex + 1];
+    state = state.copyWith(
+      currentLine: [],
+      lines: nextLines,
+      historyIndex: state.historyIndex + 1,
+    );
+  }
+
+  void clear() {
+    state = state.copyWith(
+      currentLine: [],
+      lines: [],
+      history: [[]],
+      historyIndex: 0,
+    );
+  }
+
+  void setColor(Color color) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = state.strokeWidth
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round
+      ..style = PaintingStyle.stroke;
+
+    state = state.copyWith(
+      currentColor: color,
+      selectedColor: color,
+      currentPaint: paint,
+      isErasing: false,
+    );
+  }
+
+  void updateColor(Color color) => setColor(color);
+
+  void setStrokeWidth(double width) {
+    final paint = Paint()
+      ..color = state.currentColor
+      ..strokeWidth = width
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round
+      ..style = PaintingStyle.stroke;
+
+    state = state.copyWith(
+      strokeWidth: width,
+      currentPaint: paint,
+    );
+  }
+
+  void toggleEraser() {
+    final paint = Paint()
+      ..color = state.isErasing ? state.selectedColor : Colors.white
+      ..strokeWidth = state.strokeWidth
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round
+      ..style = PaintingStyle.stroke;
+
+    state = state.copyWith(
+      isErasing: !state.isErasing,
+      currentColor: state.isErasing ? state.selectedColor : Colors.white,
+      currentPaint: paint,
     );
   }
 }
@@ -49,136 +223,3 @@ final drawingProvider =
     StateNotifierProvider<DrawingNotifier, DrawingState>((ref) {
   return DrawingNotifier();
 });
-
-class DrawingNotifier extends StateNotifier<DrawingState> {
-  DrawingNotifier()
-      : super(DrawingState(
-          points: [],
-          currentPaint: Paint()
-            ..color = Colors.black
-            ..strokeWidth = 3
-            ..strokeCap = StrokeCap.round
-            ..strokeJoin = StrokeJoin.round
-            ..style = PaintingStyle.stroke,
-          isErasing: false,
-          strokeWidth: 3,
-          selectedColor: Colors.black,
-          brushType: BrushType.normal,
-        ));
-
-  void addPoint(Offset point) {
-    final newPoint = DrawingPoint(
-      point: point,
-      paint: state.currentPaint,
-    );
-
-    state = state.copyWith(
-      points: [...state.points, newPoint],
-    );
-  }
-
-  void endLine() {
-    if (state.points.isEmpty) return;
-
-    state = state.copyWith(
-      points: [
-        ...state.points,
-        DrawingPoint(
-          point: Offset.infinite,
-          paint: state.currentPaint,
-        ),
-      ],
-    );
-  }
-
-  void clear() {
-    state = state.copyWith(points: []);
-  }
-
-  void toggleEraser() {
-    final isErasing = !state.isErasing;
-    final paint = Paint()
-      ..strokeWidth = state.strokeWidth
-      ..strokeCap = _getStrokeCap()
-      ..strokeJoin = _getStrokeJoin()
-      ..style = PaintingStyle.stroke
-      ..color = isErasing ? Colors.white : state.selectedColor;
-
-    state = state.copyWith(
-      isErasing: isErasing,
-      currentPaint: paint,
-    );
-  }
-
-  void updateStrokeWidth(double width) {
-    final paint = Paint()
-      ..strokeWidth = width
-      ..strokeCap = _getStrokeCap()
-      ..strokeJoin = _getStrokeJoin()
-      ..style = PaintingStyle.stroke
-      ..color = state.isErasing ? Colors.white : state.selectedColor;
-
-    state = state.copyWith(
-      strokeWidth: width,
-      currentPaint: paint,
-    );
-  }
-
-  void updateColor(Color color) {
-    if (state.isErasing) return;
-
-    final paint = Paint()
-      ..strokeWidth = state.strokeWidth
-      ..strokeCap = _getStrokeCap()
-      ..strokeJoin = _getStrokeJoin()
-      ..style = PaintingStyle.stroke
-      ..color = color;
-
-    state = state.copyWith(
-      selectedColor: color,
-      currentPaint: paint,
-    );
-  }
-
-  void updateBrushType(BrushType type) {
-    final paint = Paint()
-      ..strokeWidth = state.strokeWidth
-      ..strokeCap = _getStrokeCap(type)
-      ..strokeJoin = _getStrokeJoin(type)
-      ..style = PaintingStyle.stroke
-      ..color = state.isErasing ? Colors.white : state.selectedColor;
-
-    state = state.copyWith(
-      brushType: type,
-      currentPaint: paint,
-    );
-  }
-
-  StrokeCap _getStrokeCap([BrushType? type]) {
-    final brushType = type ?? state.brushType;
-    switch (brushType) {
-      case BrushType.normal:
-        return StrokeCap.round;
-      case BrushType.soft:
-        return StrokeCap.round;
-      case BrushType.square:
-        return StrokeCap.square;
-      case BrushType.calligraphy:
-        return StrokeCap.square;
-    }
-  }
-
-  StrokeJoin _getStrokeJoin([BrushType? type]) {
-    final brushType = type ?? state.brushType;
-    switch (brushType) {
-      case BrushType.normal:
-        return StrokeJoin.round;
-      case BrushType.soft:
-        return StrokeJoin.round;
-      case BrushType.square:
-        return StrokeJoin.miter;
-      case BrushType.calligraphy:
-        return StrokeJoin.bevel;
-    }
-  }
-}

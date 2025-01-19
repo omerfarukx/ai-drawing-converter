@@ -22,10 +22,11 @@ Drawing _$DrawingFromJson(Map<String, dynamic> json) {
 mixin _$Drawing {
   String get id => throw _privateConstructorUsedError;
   String get path => throw _privateConstructorUsedError;
-  DateTime get createdAt => throw _privateConstructorUsedError;
   String get category => throw _privateConstructorUsedError;
-  String? get title => throw _privateConstructorUsedError;
-  String? get description => throw _privateConstructorUsedError;
+  DateTime get createdAt => throw _privateConstructorUsedError;
+  String get title => throw _privateConstructorUsedError;
+  String get description => throw _privateConstructorUsedError;
+  bool get isAIGenerated => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
@@ -40,10 +41,11 @@ abstract class $DrawingCopyWith<$Res> {
   $Res call(
       {String id,
       String path,
-      DateTime createdAt,
       String category,
-      String? title,
-      String? description});
+      DateTime createdAt,
+      String title,
+      String description,
+      bool isAIGenerated});
 }
 
 /// @nodoc
@@ -61,10 +63,11 @@ class _$DrawingCopyWithImpl<$Res, $Val extends Drawing>
   $Res call({
     Object? id = null,
     Object? path = null,
-    Object? createdAt = null,
     Object? category = null,
-    Object? title = freezed,
-    Object? description = freezed,
+    Object? createdAt = null,
+    Object? title = null,
+    Object? description = null,
+    Object? isAIGenerated = null,
   }) {
     return _then(_value.copyWith(
       id: null == id
@@ -75,22 +78,26 @@ class _$DrawingCopyWithImpl<$Res, $Val extends Drawing>
           ? _value.path
           : path // ignore: cast_nullable_to_non_nullable
               as String,
-      createdAt: null == createdAt
-          ? _value.createdAt
-          : createdAt // ignore: cast_nullable_to_non_nullable
-              as DateTime,
       category: null == category
           ? _value.category
           : category // ignore: cast_nullable_to_non_nullable
               as String,
-      title: freezed == title
+      createdAt: null == createdAt
+          ? _value.createdAt
+          : createdAt // ignore: cast_nullable_to_non_nullable
+              as DateTime,
+      title: null == title
           ? _value.title
           : title // ignore: cast_nullable_to_non_nullable
-              as String?,
-      description: freezed == description
+              as String,
+      description: null == description
           ? _value.description
           : description // ignore: cast_nullable_to_non_nullable
-              as String?,
+              as String,
+      isAIGenerated: null == isAIGenerated
+          ? _value.isAIGenerated
+          : isAIGenerated // ignore: cast_nullable_to_non_nullable
+              as bool,
     ) as $Val);
   }
 }
@@ -105,10 +112,11 @@ abstract class _$$DrawingImplCopyWith<$Res> implements $DrawingCopyWith<$Res> {
   $Res call(
       {String id,
       String path,
-      DateTime createdAt,
       String category,
-      String? title,
-      String? description});
+      DateTime createdAt,
+      String title,
+      String description,
+      bool isAIGenerated});
 }
 
 /// @nodoc
@@ -124,10 +132,11 @@ class __$$DrawingImplCopyWithImpl<$Res>
   $Res call({
     Object? id = null,
     Object? path = null,
-    Object? createdAt = null,
     Object? category = null,
-    Object? title = freezed,
-    Object? description = freezed,
+    Object? createdAt = null,
+    Object? title = null,
+    Object? description = null,
+    Object? isAIGenerated = null,
   }) {
     return _then(_$DrawingImpl(
       id: null == id
@@ -138,22 +147,26 @@ class __$$DrawingImplCopyWithImpl<$Res>
           ? _value.path
           : path // ignore: cast_nullable_to_non_nullable
               as String,
-      createdAt: null == createdAt
-          ? _value.createdAt
-          : createdAt // ignore: cast_nullable_to_non_nullable
-              as DateTime,
       category: null == category
           ? _value.category
           : category // ignore: cast_nullable_to_non_nullable
               as String,
-      title: freezed == title
+      createdAt: null == createdAt
+          ? _value.createdAt
+          : createdAt // ignore: cast_nullable_to_non_nullable
+              as DateTime,
+      title: null == title
           ? _value.title
           : title // ignore: cast_nullable_to_non_nullable
-              as String?,
-      description: freezed == description
+              as String,
+      description: null == description
           ? _value.description
           : description // ignore: cast_nullable_to_non_nullable
-              as String?,
+              as String,
+      isAIGenerated: null == isAIGenerated
+          ? _value.isAIGenerated
+          : isAIGenerated // ignore: cast_nullable_to_non_nullable
+              as bool,
     ));
   }
 }
@@ -164,10 +177,11 @@ class _$DrawingImpl implements _Drawing {
   const _$DrawingImpl(
       {required this.id,
       required this.path,
-      required this.createdAt,
       required this.category,
-      this.title,
-      this.description});
+      required this.createdAt,
+      required this.title,
+      required this.description,
+      this.isAIGenerated = false});
 
   factory _$DrawingImpl.fromJson(Map<String, dynamic> json) =>
       _$$DrawingImplFromJson(json);
@@ -177,17 +191,20 @@ class _$DrawingImpl implements _Drawing {
   @override
   final String path;
   @override
-  final DateTime createdAt;
-  @override
   final String category;
   @override
-  final String? title;
+  final DateTime createdAt;
   @override
-  final String? description;
+  final String title;
+  @override
+  final String description;
+  @override
+  @JsonKey()
+  final bool isAIGenerated;
 
   @override
   String toString() {
-    return 'Drawing(id: $id, path: $path, createdAt: $createdAt, category: $category, title: $title, description: $description)';
+    return 'Drawing(id: $id, path: $path, category: $category, createdAt: $createdAt, title: $title, description: $description, isAIGenerated: $isAIGenerated)';
   }
 
   @override
@@ -197,19 +214,21 @@ class _$DrawingImpl implements _Drawing {
             other is _$DrawingImpl &&
             (identical(other.id, id) || other.id == id) &&
             (identical(other.path, path) || other.path == path) &&
-            (identical(other.createdAt, createdAt) ||
-                other.createdAt == createdAt) &&
             (identical(other.category, category) ||
                 other.category == category) &&
+            (identical(other.createdAt, createdAt) ||
+                other.createdAt == createdAt) &&
             (identical(other.title, title) || other.title == title) &&
             (identical(other.description, description) ||
-                other.description == description));
+                other.description == description) &&
+            (identical(other.isAIGenerated, isAIGenerated) ||
+                other.isAIGenerated == isAIGenerated));
   }
 
   @JsonKey(ignore: true)
   @override
-  int get hashCode => Object.hash(
-      runtimeType, id, path, createdAt, category, title, description);
+  int get hashCode => Object.hash(runtimeType, id, path, category, createdAt,
+      title, description, isAIGenerated);
 
   @JsonKey(ignore: true)
   @override
@@ -229,10 +248,11 @@ abstract class _Drawing implements Drawing {
   const factory _Drawing(
       {required final String id,
       required final String path,
-      required final DateTime createdAt,
       required final String category,
-      final String? title,
-      final String? description}) = _$DrawingImpl;
+      required final DateTime createdAt,
+      required final String title,
+      required final String description,
+      final bool isAIGenerated}) = _$DrawingImpl;
 
   factory _Drawing.fromJson(Map<String, dynamic> json) = _$DrawingImpl.fromJson;
 
@@ -241,13 +261,15 @@ abstract class _Drawing implements Drawing {
   @override
   String get path;
   @override
-  DateTime get createdAt;
-  @override
   String get category;
   @override
-  String? get title;
+  DateTime get createdAt;
   @override
-  String? get description;
+  String get title;
+  @override
+  String get description;
+  @override
+  bool get isAIGenerated;
   @override
   @JsonKey(ignore: true)
   _$$DrawingImplCopyWith<_$DrawingImpl> get copyWith =>

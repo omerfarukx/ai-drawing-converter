@@ -9,10 +9,11 @@ class Drawing with _$Drawing {
   const factory Drawing({
     required String id,
     required String path,
-    required DateTime createdAt,
     required String category,
-    String? title,
-    String? description,
+    required DateTime createdAt,
+    required String title,
+    required String description,
+    @Default(false) bool isAIGenerated,
   }) = _Drawing;
 
   factory Drawing.fromJson(Map<String, dynamic> json) =>

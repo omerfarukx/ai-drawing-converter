@@ -28,9 +28,9 @@ class AIService {
       'sk-47VPRkOkBYj5Cw2gjWEaDVI1A5HzNQrBzbtcESoSWTfHPPH7';
 
   static Future<String> generateImage(
-    Uint8List imageBytes, {
-    required AIModel model,
-  }) async {
+    Uint8List imageBytes,
+    AIModel model,
+  ) async {
     try {
       // MultipartRequest oluştur
       final request = http.MultipartRequest(
@@ -46,21 +46,21 @@ class AIService {
       });
 
       // Model parametrelerini ekle
-      final modelJson = model.toJson();
-      modelJson['text_prompts'].asMap().forEach((index, prompt) {
-        request.fields['text_prompts[$index][text]'] = prompt['text'];
-        request.fields['text_prompts[$index][weight]'] =
-            prompt['weight'].toString();
+      request.fields.addAll({
+        'text_prompts[0][text]':
+            '${model.basePrompt}, masterpiece, best quality, extremely detailed, ultra high resolution, professional, 8k uhd, perfect composition, well-balanced, full scene, no empty space',
+        'text_prompts[0][weight]': '1',
+        'text_prompts[1][text]':
+            'ugly, blurry, low quality, distorted, deformed, disfigured, bad anatomy, watermark, signature, text, missing details, empty background, cropped, out of frame',
+        'text_prompts[1][weight]': '-1',
+        'cfg_scale': '12',
+        'clip_guidance_preset': 'FAST_BLUE',
+        'samples': '1',
+        'steps': '50',
+        'style_preset': _getStylePreset(model.modelType),
+        'init_image_mode': 'IMAGE_STRENGTH',
+        'image_strength': '0.20',
       });
-
-      request.fields['cfg_scale'] = modelJson['cfg_scale'].toString();
-      request.fields['clip_guidance_preset'] =
-          modelJson['clip_guidance_preset'];
-      request.fields['style_preset'] = modelJson['style_preset'];
-      request.fields['samples'] = modelJson['samples'].toString();
-      request.fields['steps'] = modelJson['steps'].toString();
-      request.fields['init_image_mode'] = modelJson['init_image_mode'];
-      request.fields['image_strength'] = modelJson['image_strength'].toString();
 
       // Resmi ekle
       request.files.add(
@@ -72,14 +72,9 @@ class AIService {
         ),
       );
 
-      print('İstek gönderiliyor...');
-      print('Request fields: ${request.fields}');
-
       // İsteği gönder
       final streamedResponse = await request.send();
       final response = await http.Response.fromStream(streamedResponse);
-      print('Yanıt alındı: ${response.statusCode}');
-      print('Yanıt body: ${response.body}');
 
       if (response.statusCode != 200) {
         throw AIServiceException(
@@ -101,27 +96,33 @@ class AIService {
         throw AIServiceException('Geçersiz görüntü verisi alındı');
       }
 
-      try {
-        // Base64'ü doğrula
-        final decodedImage = base64Decode(resultImage);
-        if (decodedImage.isEmpty) {
-          throw AIServiceException('Görüntü verisi boş');
-        }
-
-        // Görüntüyü kaydet
-        final imagePath = await saveImage(resultImage);
-        print('Görüntü kaydedildi: $imagePath');
-
-        return resultImage;
-      } catch (e) {
-        print('Görüntü işleme hatası: $e');
-        throw AIServiceException('Görüntü işlenemedi: ${e.toString()}');
-      }
+      return resultImage;
     } catch (e) {
-      print('Hata oluştu: $e');
       if (e is AIServiceException) rethrow;
-      throw AIServiceException('Beklenmeyen bir hata oluştu: ${e.toString()}');
+      throw AIServiceException('AI Servisi Hatası: $e');
     }
+  }
+
+  static String _getStylePreset(AIModelType modelType) {
+    switch (modelType) {
+      case AIModelType.realistic:
+        return '3d-model';
+      case AIModelType.cartoon:
+        return 'cinematic';
+      case AIModelType.anime:
+        return 'anime';
+      case AIModelType.sketch:
+        return 'origami';
+    }
+  }
+
+  // Test için mock fonksiyon
+  static Future<String> mockGenerateImage(
+    Uint8List imageBytes,
+    AIModel model,
+  ) async {
+    await Future.delayed(const Duration(seconds: 2));
+    return 'https://picsum.photos/512';
   }
 
   static Future<String> saveImage(String base64Image) async {

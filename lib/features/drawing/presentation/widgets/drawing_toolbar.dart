@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/drawing_provider.dart';
 import '../../domain/services/drawing_service.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 final toolbarExpandedProvider = StateProvider<bool>((ref) => true);
 
@@ -11,7 +12,7 @@ class DrawingToolbar extends ConsumerWidget {
   Future<void> _handleSave(BuildContext context, WidgetRef ref) async {
     try {
       final size = MediaQuery.of(context).size;
-      final points = ref.read(drawingProvider).points;
+      final points = ref.read(drawingProvider).allPoints;
 
       if (points.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -49,6 +50,7 @@ class DrawingToolbar extends ConsumerWidget {
     final drawingState = ref.watch(drawingProvider);
     final screenWidth = MediaQuery.of(context).size.width;
     final isExpanded = ref.watch(toolbarExpandedProvider);
+    final l10n = AppLocalizations.of(context)!;
 
     return Container(
       width: screenWidth,
@@ -86,40 +88,39 @@ class DrawingToolbar extends ConsumerWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              // Silgi aracı
-              _buildToolButton(
-                context: context,
-                icon: Icons.brush,
-                label: 'Fırça',
-                isSelected: !drawingState.isErasing,
-                onTap: () {
-                  if (drawingState.isErasing) {
-                    ref.read(drawingProvider.notifier).toggleEraser();
-                  }
-                },
+              IconButton(
+                icon: const Icon(Icons.undo),
+                onPressed: drawingState.canUndo
+                    ? () => ref.read(drawingProvider.notifier).undo()
+                    : null,
+                tooltip: l10n.undo,
               ),
-              _buildToolButton(
-                context: context,
-                icon: Icons.cleaning_services,
-                label: 'Silgi',
-                isSelected: drawingState.isErasing,
-                onTap: () {
-                  if (!drawingState.isErasing) {
-                    ref.read(drawingProvider.notifier).toggleEraser();
-                  }
-                },
+              IconButton(
+                icon: const Icon(Icons.redo),
+                onPressed: drawingState.canRedo
+                    ? () => ref.read(drawingProvider.notifier).redo()
+                    : null,
+                tooltip: l10n.redo,
               ),
-              _buildToolButton(
-                context: context,
-                icon: Icons.delete_outline,
-                label: 'Temizle',
-                onTap: () => ref.read(drawingProvider.notifier).clear(),
+              IconButton(
+                icon: const Icon(Icons.color_lens),
+                onPressed: () => _showColorPicker(context, ref),
+                tooltip: l10n.changeColor,
               ),
-              _buildToolButton(
-                context: context,
-                icon: Icons.save,
-                label: 'Kaydet',
-                onTap: () => _handleSave(context, ref),
+              IconButton(
+                icon: const Icon(Icons.brush),
+                onPressed: () => _showBrushSettings(context, ref),
+                tooltip: l10n.brushSettings,
+              ),
+              IconButton(
+                icon: const Icon(Icons.delete),
+                onPressed: () => ref.read(drawingProvider.notifier).clear(),
+                tooltip: l10n.clear,
+              ),
+              IconButton(
+                icon: const Icon(Icons.save),
+                onPressed: () => _handleSave(context, ref),
+                tooltip: l10n.save,
               ),
             ],
           ),
@@ -130,90 +131,19 @@ class DrawingToolbar extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Column(
                 children: [
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).primaryColor.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      drawingState.strokeWidth.toStringAsFixed(1),
-                      style: TextStyle(
-                        color: Theme.of(context).primaryColor,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                  Text(
+                    l10n.brushSize,
+                    style: Theme.of(context).textTheme.titleMedium,
                   ),
-                  const SizedBox(height: 4),
-                  SliderTheme(
-                    data: SliderThemeData(
-                      activeTrackColor: Theme.of(context).primaryColor,
-                      inactiveTrackColor:
-                          Theme.of(context).primaryColor.withOpacity(0.2),
-                      thumbColor: Theme.of(context).primaryColor,
-                      overlayColor:
-                          Theme.of(context).primaryColor.withOpacity(0.1),
-                      trackHeight: 4,
-                    ),
-                    child: Slider(
-                      value: drawingState.strokeWidth,
-                      min: 1,
-                      max: 20,
-                      onChanged: (value) => ref
-                          .read(drawingProvider.notifier)
-                          .updateStrokeWidth(value),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 8),
-            // Fırça Tipleri
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _buildBrushTypeButton(
-                    context: context,
-                    icon: Icons.brush,
-                    label: 'Normal',
-                    isSelected: drawingState.brushType == BrushType.normal,
-                    onTap: () => ref
-                        .read(drawingProvider.notifier)
-                        .updateBrushType(BrushType.normal),
-                  ),
-                  const SizedBox(width: 8),
-                  _buildBrushTypeButton(
-                    context: context,
-                    icon: Icons.format_paint,
-                    label: 'Yumuşak',
-                    isSelected: drawingState.brushType == BrushType.soft,
-                    onTap: () => ref
-                        .read(drawingProvider.notifier)
-                        .updateBrushType(BrushType.soft),
-                  ),
-                  const SizedBox(width: 8),
-                  _buildBrushTypeButton(
-                    context: context,
-                    icon: Icons.crop_square,
-                    label: 'Kare',
-                    isSelected: drawingState.brushType == BrushType.square,
-                    onTap: () => ref
-                        .read(drawingProvider.notifier)
-                        .updateBrushType(BrushType.square),
-                  ),
-                  const SizedBox(width: 8),
-                  _buildBrushTypeButton(
-                    context: context,
-                    icon: Icons.create,
-                    label: 'Kaligrafi',
-                    isSelected: drawingState.brushType == BrushType.calligraphy,
-                    onTap: () => ref
-                        .read(drawingProvider.notifier)
-                        .updateBrushType(BrushType.calligraphy),
+                  Slider(
+                    value: drawingState.strokeWidth,
+                    min: 1,
+                    max: 20,
+                    divisions: 19,
+                    label: drawingState.strokeWidth.round().toString(),
+                    onChanged: (value) {
+                      ref.read(drawingProvider.notifier).setStrokeWidth(value);
+                    },
                   ),
                 ],
               ),
@@ -299,6 +229,67 @@ class DrawingToolbar extends ConsumerWidget {
     );
   }
 
+  void _showColorPicker(BuildContext context, WidgetRef ref) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(16),
+        child: Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            Colors.black,
+            Colors.red,
+            Colors.blue,
+            Colors.green,
+            Colors.yellow,
+            Colors.purple,
+            Colors.orange,
+            Colors.brown,
+          ]
+              .map((color) => _ColorButton(
+                    color: color,
+                    onTap: () {
+                      ref.read(drawingProvider.notifier).updateColor(color);
+                      Navigator.pop(context);
+                    },
+                  ))
+              .toList(),
+        ),
+      ),
+    );
+  }
+
+  void _showBrushSettings(BuildContext context, WidgetRef ref) {
+    final drawingState = ref.watch(drawingProvider);
+
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              AppLocalizations.of(context)!.brushSize,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            Slider(
+              value: drawingState.strokeWidth,
+              min: 1,
+              max: 20,
+              divisions: 19,
+              label: drawingState.strokeWidth.round().toString(),
+              onChanged: (value) {
+                ref.read(drawingProvider.notifier).setStrokeWidth(value);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildToolButton({
     required BuildContext context,
     required IconData icon,
@@ -324,58 +315,6 @@ class DrawingToolbar extends ConsumerWidget {
             color: isSelected
                 ? Theme.of(context).primaryColor
                 : Theme.of(context).iconTheme.color,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBrushTypeButton({
-    required BuildContext context,
-    required IconData icon,
-    required String label,
-    required bool isSelected,
-    required VoidCallback onTap,
-  }) {
-    return Tooltip(
-      message: label,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: BoxDecoration(
-            color: isSelected
-                ? Theme.of(context).primaryColor.withOpacity(0.1)
-                : null,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: isSelected
-                  ? Theme.of(context).primaryColor
-                  : Colors.transparent,
-            ),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                icon,
-                color: isSelected
-                    ? Theme.of(context).primaryColor
-                    : Theme.of(context).iconTheme.color,
-                size: 20,
-              ),
-              const SizedBox(width: 4),
-              Text(
-                label,
-                style: TextStyle(
-                  color: isSelected
-                      ? Theme.of(context).primaryColor
-                      : Theme.of(context).textTheme.bodyMedium?.color,
-                  fontWeight: isSelected ? FontWeight.bold : null,
-                ),
-              ),
-            ],
           ),
         ),
       ),
@@ -412,6 +351,35 @@ class DrawingToolbar extends ConsumerWidget {
                 offset: const Offset(0, 2),
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ColorButton extends StatelessWidget {
+  final Color color;
+  final VoidCallback onTap;
+
+  const _ColorButton({
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: color,
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: Colors.grey.shade300,
+            width: 2,
           ),
         ),
       ),

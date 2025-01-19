@@ -1,122 +1,134 @@
-import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:uuid/uuid.dart';
-import '../../../gallery/domain/models/drawing.dart';
+import '../../presentation/providers/ai_provider.dart';
 import '../../../gallery/domain/repositories/gallery_repository.dart';
-import '../providers/ai_provider.dart';
+import '../../../gallery/domain/models/drawing.dart';
+import '../widgets/ai_button.dart';
+import '../../domain/models/ai_model.dart';
 
-class AiResultDialog extends ConsumerWidget {
-  final String imageUrl;
+class AIResultDialog extends ConsumerWidget {
+  const AIResultDialog({super.key});
 
-  const AiResultDialog({
-    super.key,
-    required this.imageUrl,
-  });
-
-  Future<void> _saveImage(BuildContext context) async {
-    try {
-      // Base64'ü decode et
-      final bytes = base64Decode(imageUrl);
-
-      // Uygulama dökümanlar dizinini al
-      final appDir = await getApplicationDocumentsDirectory();
-      final imagesDir = Directory('${appDir.path}/images');
-
-      // Dizin yoksa oluştur
-      if (!await imagesDir.exists()) {
-        await imagesDir.create(recursive: true);
-      }
-
-      // Dosya adı oluştur
-      final timestamp = DateTime.now().millisecondsSinceEpoch;
-      final filePath = '${imagesDir.path}/image_$timestamp.png';
-
-      // Dosyayı kaydet
-      final file = File(filePath);
-      await file.writeAsBytes(bytes);
-
-      // Drawing nesnesini oluştur ve kaydet
-      final drawing = Drawing(
-        id: const Uuid().v4(),
-        path: filePath,
-        createdAt: DateTime.now(),
-        category: 'AI Generated',
-        title: 'AI Drawing',
-      );
-
-      // GalleryRepository'ye kaydet
-      final galleryRepository = GalleryRepository();
-      await galleryRepository.saveDrawing(drawing);
-
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Görsel başarıyla kaydedildi'),
-            backgroundColor: Colors.green,
-          ),
-        );
-        Navigator.pop(context);
-      }
-    } catch (e) {
-      print('Görsel kaydetme hatası: $e');
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Görsel kaydedilemedi: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+  String _getModelLabel(AIModelType type) {
+    switch (type) {
+      case AIModelType.realistic:
+        return 'Gerçekçi';
+      case AIModelType.cartoon:
+        return 'Karikatür';
+      case AIModelType.anime:
+        return 'Anime';
+      case AIModelType.sketch:
+        return 'Karakalem';
     }
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context)!;
+    final aiState = ref.watch(aiProvider);
+    final selectedModel = ref.watch(selectedModelProvider);
 
     return Dialog(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: AspectRatio(
-              aspectRatio: 1,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: Image.memory(
-                  base64Decode(imageUrl),
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    print('Görüntü yükleme hatası: $error');
-                    return const Center(
-                      child: Icon(Icons.error, color: Colors.red, size: 48),
-                    );
-                  },
-                ),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (aiState.error != null) ...[
+              const Icon(
+                Icons.error_outline,
+                color: Colors.red,
+                size: 48,
               ),
-            ),
-          ),
-          ButtonBar(
-            children: [
+              const SizedBox(height: 16),
+              Text(
+                aiState.error!,
+                style: const TextStyle(color: Colors.red),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
               TextButton(
                 onPressed: () {
                   ref.read(aiProvider.notifier).clearImage();
-                  Navigator.pop(context);
+                  Navigator.of(context).pop();
                 },
-                child: Text(l10n.cancel),
+                child: const Text('Tamam'),
               ),
-              FilledButton(
-                onPressed: () => _saveImage(context),
-                child: Text(l10n.save),
+            ] else if (aiState.isProcessing) ...[
+              const CircularProgressIndicator(),
+              const SizedBox(height: 16),
+              const Text('Resim oluşturuluyor...'),
+            ] else if (aiState.imageUrl != null) ...[
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.file(
+                  File(aiState.imageUrl!),
+                  width: 300,
+                  height: 300,
+                  fit: BoxFit.contain,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  ElevatedButton.icon(
+                    onPressed: () async {
+                      try {
+                        final galleryRepo = ref.read(galleryRepositoryProvider);
+                        final timestamp = DateTime.now();
+                        final modelLabel = _getModelLabel(selectedModel);
+
+                        final drawing = Drawing(
+                          id: timestamp.millisecondsSinceEpoch.toString(),
+                          path: aiState.imageUrl!,
+                          category: 'AI',
+                          createdAt: timestamp,
+                          isAIGenerated: true,
+                          title:
+                              'AI Çizim (${modelLabel}) ${timestamp.day}/${timestamp.month}/${timestamp.year}',
+                          description:
+                              '${modelLabel} tarzında yapay zeka ile oluşturulmuş çizim',
+                        );
+
+                        await galleryRepo.saveDrawing(drawing);
+
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Resim galeriye kaydedildi'),
+                              backgroundColor: Colors.green,
+                            ),
+                          );
+                          Navigator.of(context).pop();
+                        }
+                      } catch (e) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Hata: $e'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
+                      }
+                    },
+                    icon: const Icon(Icons.save),
+                    label: const Text('Galeriye Kaydet'),
+                  ),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      ref.read(aiProvider.notifier).clearImage();
+                      Navigator.of(context).pop();
+                    },
+                    icon: const Icon(Icons.close),
+                    label: const Text('Kapat'),
+                  ),
+                ],
               ),
             ],
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
