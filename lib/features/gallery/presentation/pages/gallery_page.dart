@@ -185,9 +185,21 @@ class _DrawingCard extends StatelessWidget {
           child: Stack(
             fit: StackFit.expand,
             children: [
-              Image.asset(
-                drawing.path,
+              Image.file(
+                File(drawing.path),
                 fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    color: Colors.grey[200],
+                    child: const Center(
+                      child: Icon(
+                        Icons.error_outline,
+                        color: Colors.grey,
+                        size: 32,
+                      ),
+                    ),
+                  );
+                },
               ),
               if (drawing.isAIGenerated)
                 Positioned(

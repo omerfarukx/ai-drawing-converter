@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Yapayzeka Cizim</string>
+	<string>DreamDoodle</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -44,6 +44,10 @@
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
+	<true/>
+	<key>GADApplicationIdentifier</key>
+	<string>ca-app-pub-xxxxxxxxxxxxxxxx~yyyyyyyyyy</string>
+	<key>SKPaymentQueue</key>
 	<true/>
 </dict>
 </plist>

@@ -1,31 +1,42 @@
-# AI Çizim Uygulaması
+# DreamDoodle
 
-Bu Flutter uygulaması, kullanıcıların çizimler yapmasına ve bu çizimleri yapay zeka ile gerçekçi görsellere dönüştürmesine olanak sağlar.
+A Flutter application that allows users to create drawings and transform them into realistic images using artificial intelligence.
 
-## Özellikler
+## Screenshots
 
-- Serbest çizim yapabilme
-- Farklı renk ve kalınlık seçenekleri
-- Silgi aracı
-- Geri alma özelliği
-- Çizimleri kaydetme
-- AI ile gerçekçi görsele dönüştürme
-- Dönüştürülen görselleri kaydetme
+<div style="display: flex; justify-content: space-between;">
+    <img src="screenshots/drawing_screen.png" width="250" alt="Drawing Screen"/>
+    <img src="screenshots/profile_screen.png" width="250" alt="Profile Screen"/>
+    <img src="screenshots/gallery_screen.png" width="250" alt="Gallery Screen"/>
+</div>
 
-## Kurulum
+## Features
 
-1. Flutter'ı yükleyin (https://flutter.dev/docs/get-started/install)
-2. Repository'yi klonlayın
+- Free-hand drawing
+- Various color and thickness options
+- Eraser tool
+- Undo functionality
+- Save drawings
+- Transform drawings into realistic images using AI
+- Save transformed images
+- Credit system for AI transformations
+- Earn credits by watching ads
+- Premium membership options
+
+## Installation
+
+1. Install Flutter (https://flutter.dev/docs/get-started/install)
+2. Clone the repository
 ```bash
-git clone https://github.com/KULLANICI_ADINIZ/REPO_ADINIZ.git
+git clone https://github.com/omerfarukx/ai-drawing-converter
 ```
-3. Bağımlılıkları yükleyin
+3. Install dependencies
 ```bash
 flutter pub get
 ```
-4. API anahtarınızı ayarlayın
-   - `lib/core/config/api_config.dart` dosyası oluşturun
-   - Aşağıdaki içeriği ekleyin:
+4. Set up your API key
+   - Create `lib/core/config/api_config.dart` file
+   - Add the following content:
 ```dart
 class ApiConfig {
   static const String apiKey = 'YOUR_API_KEY';
@@ -34,22 +45,22 @@ class ApiConfig {
 }
 ```
 
-## Kullanım
+## Usage
 
-1. Çizim yapmak için ekranı kullanın
-2. Sol taraftaki araç çubuğundan renk ve kalınlık seçin
-3. Çizimi kaydetmek için kaydet butonunu kullanın
-4. AI dönüşümü için AI butonuna tıklayın
-5. Oluşturulan görseli kaydetmek için kaydet butonunu kullanın
+1. Use the screen to draw
+2. Select color and thickness from the toolbar on the left
+3. Use the save button to save your drawing
+4. Click the AI button for AI transformation
+5. Use the save button to save the generated image
 
-## Katkıda Bulunma
+## Contributing
 
-1. Bu repository'yi fork edin
-2. Feature branch'i oluşturun (`git checkout -b feature/amazing-feature`)
-3. Değişikliklerinizi commit edin (`git commit -m 'feat: Add some amazing feature'`)
-4. Branch'inizi push edin (`git push origin feature/amazing-feature`)
-5. Pull Request oluşturun
+1. Fork this repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'feat: Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Create a Pull Request
 
-## Lisans
+## License
 
-Bu proje MIT lisansı altında lisanslanmıştır. Detaylar için [LICENSE](LICENSE) dosyasına bakın.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

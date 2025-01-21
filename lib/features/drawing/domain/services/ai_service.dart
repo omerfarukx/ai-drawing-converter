@@ -59,7 +59,7 @@ class AIService {
         'steps': '50',
         'style_preset': _getStylePreset(model.modelType),
         'init_image_mode': 'IMAGE_STRENGTH',
-        'image_strength': '0.20',
+        'image_strength': '0.10',
       });
 
       // Resmi ekle

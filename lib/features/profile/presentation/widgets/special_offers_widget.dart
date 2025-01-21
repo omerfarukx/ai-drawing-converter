@@ -62,8 +62,7 @@ class SpecialOffersWidget extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 FutureBuilder<List<ProductDetails>>(
-                  future:
-                      _purchaseService.getProducts(includeSpecialOffers: true),
+                  future: _purchaseService.getProducts(),
                   builder: (context, snapshot) {
                     if (!snapshot.hasData) {
                       return const CircularProgressIndicator();
@@ -79,12 +78,8 @@ class SpecialOffersWidget extends StatelessWidget {
                           title: Text(product.title),
                           subtitle: Text(product.description),
                           trailing: ElevatedButton(
-                            onPressed: () {
-                              if (product.id.contains('credits')) {
-                                _purchaseService.buyCredits(product.id);
-                              } else {
-                                _purchaseService.buyPremium();
-                              }
+                            onPressed: () async {
+                              await _purchaseService.buyProduct(product);
                             },
                             child: Text(product.price),
                           ),

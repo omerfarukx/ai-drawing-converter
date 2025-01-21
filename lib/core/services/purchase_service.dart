@@ -1,184 +1,169 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:yapayzeka_cizim/core/services/user_service.dart';
 
 class PurchaseService {
-  static const String _credits10Id = 'credits_10';
-  static const String _credits25Id = 'credits_25';
-  static const String _credits50Id = 'credits_50';
-  static const String _premiumId = 'premium_membership';
-  static const double _firstPurchaseDiscountPercent = 0.20;
-
-  static String getProductId(int credits) {
-    switch (credits) {
-      case 10:
-        return _credits10Id;
-      case 25:
-        return _credits25Id;
-      case 50:
-        return _credits50Id;
-      default:
-        throw Exception('Invalid credit amount');
-    }
-  }
-
-  final InAppPurchase _iap;
-  final UserService _userService;
-  late StreamSubscription<List<PurchaseDetails>> _subscription;
-  final StreamController<PurchaseDetails> _purchaseController =
-      StreamController<PurchaseDetails>.broadcast();
-
-  // Singleton pattern
   static final PurchaseService _instance = PurchaseService._internal();
-  factory PurchaseService() => _instance;
 
-  PurchaseService._internal()
-      : _iap = InAppPurchase.instance,
-        _userService = UserService() {
-    _subscription = _iap.purchaseStream.listen(_handlePurchaseUpdates);
+  factory PurchaseService() {
+    return _instance;
   }
 
-  Future<double> _calculateDiscountedPrice(ProductDetails product) async {
-    double price =
-        double.parse(product.price.replaceAll(RegExp(r'[^0-9.]'), ''));
-    if (await _userService.isFirstPurchase()) {
-      price = price * (1 - _firstPurchaseDiscountPercent);
+  PurchaseService._internal();
+
+  final InAppPurchase _inAppPurchase = InAppPurchase.instance;
+  StreamSubscription<List<PurchaseDetails>>? _subscription;
+  List<ProductDetails> _products = [];
+
+  Future<void> initialize() async {
+    if (kDebugMode) {
+      print('Debug modunda satın alma sistemi başlatıldı');
+      return;
     }
-    return price;
+
+    final bool available = await _inAppPurchase.isAvailable();
+    if (!available) {
+      print('Uygulama içi satın alma kullanılamıyor');
+      return;
+    }
+
+    _subscription = _inAppPurchase.purchaseStream.listen(
+      _handlePurchaseUpdates,
+      onDone: () => _subscription?.cancel(),
+      onError: (error) => print('Satın alma hatası: $error'),
+    );
+
+    await getProducts();
   }
 
-  Future<List<ProductDetails>> getProducts(
-      {bool includeSpecialOffers = false}) async {
-    try {
-      final bool available = await _iap.isAvailable();
-      if (!available) {
-        return [];
-      }
+  Future<List<ProductDetails>> getProducts() async {
+    if (kDebugMode) {
+      // Debug modunda test ürünleri
+      return [
+        ProductDetails(
+          id: 'credits_10',
+          title: '10 AI Çizim Kredisi',
+          description: 'AI ile çizim yapmak için 10 kredi',
+          price: '₺34,99',
+          rawPrice: 34.99,
+          currencyCode: 'TRY',
+        ),
+        ProductDetails(
+          id: 'credits_25',
+          title: '25 AI Çizim Kredisi',
+          description: 'AI ile çizim yapmak için 25 kredi',
+          price: '₺50,00',
+          rawPrice: 50.00,
+          currencyCode: 'TRY',
+        ),
+        ProductDetails(
+          id: 'credits_50',
+          title: '50+5 AI Çizim Kredisi',
+          description: 'AI ile çizim yapmak için 50+5 bonus kredi',
+          price: '₺99,00',
+          rawPrice: 99.00,
+          currencyCode: 'TRY',
+        ),
+        ProductDetails(
+          id: 'credits_100',
+          title: '100+15 AI Çizim Kredisi',
+          description: 'AI ile çizim yapmak için 100+15 bonus kredi',
+          price: '₺200,00',
+          rawPrice: 200.00,
+          currencyCode: 'TRY',
+        ),
+      ];
+    }
 
+    try {
       final Set<String> ids = {
-        _credits10Id,
-        _credits25Id,
-        _credits50Id,
-        _premiumId,
+        'credits_10',
+        'credits_25',
+        'credits_50',
+        'credits_100',
+        'premium_membership',
       };
 
       final ProductDetailsResponse response =
-          await _iap.queryProductDetails(ids);
-      final products = response.productDetails;
+          await _inAppPurchase.queryProductDetails(ids);
 
-      if (includeSpecialOffers && await _userService.shouldShowSpecialOffer()) {
-        await _userService.markSpecialOfferShown();
-
-        for (var product in products) {
-          await _calculateDiscountedPrice(product);
-        }
+      if (response.notFoundIDs.isNotEmpty) {
+        print('Bulunamayan ürünler: ${response.notFoundIDs}');
       }
 
-      return products;
+      _products = response.productDetails;
+      return _products;
     } catch (e) {
-      print('Error getting products: $e');
+      print('Ürünler yüklenirken hata: $e');
       return [];
     }
   }
 
-  void _handlePurchaseUpdates(List<PurchaseDetails> purchaseDetailsList) async {
-    for (var purchaseDetails in purchaseDetailsList) {
-      if (purchaseDetails.status == PurchaseStatus.purchased ||
-          purchaseDetails.status == PurchaseStatus.restored) {
-        if (await _userService.isFirstPurchase()) {
-          await _userService.markFirstPurchaseUsed();
-        }
-
-        // Kredi satın alımlarını işle
-        if (purchaseDetails.productID.contains('credits')) {
-          final credits = _getCreditsFromProductId(purchaseDetails.productID);
-          await _userService.addCredits(credits);
-        }
-
-        _purchaseController.add(purchaseDetails);
-      }
-
-      if (purchaseDetails.pendingCompletePurchase) {
-        await _iap.completePurchase(purchaseDetails);
-      }
+  Future<bool> buyProduct(ProductDetails product) async {
+    if (kDebugMode) {
+      print('Debug modunda test satın alma: ${product.id}');
+      return true;
     }
-  }
 
-  int _getCreditsFromProductId(String productId) {
-    switch (productId) {
-      case _credits10Id:
-        return 10;
-      case _credits25Id:
-        return 25;
-      case _credits50Id:
-        return 50 + 5; // 5 bonus kredi
-      default:
-        return 0;
-    }
-  }
-
-  Future<bool> buyCredits(String productId) async {
     try {
-      final bool available = await _iap.isAvailable();
-      if (!available) {
-        return false;
+      final PurchaseParam purchaseParam = PurchaseParam(
+        productDetails: product,
+      );
+
+      if (product.id == 'premium_membership') {
+        return await _inAppPurchase.buyNonConsumable(
+          purchaseParam: purchaseParam,
+        );
+      } else {
+        return await _inAppPurchase.buyConsumable(
+          purchaseParam: purchaseParam,
+        );
       }
-
-      final ProductDetailsResponse response =
-          await _iap.queryProductDetails({productId});
-      if (response.notFoundIDs.isNotEmpty) {
-        return false;
-      }
-
-      final productDetails = response.productDetails.first;
-      final purchaseParam = PurchaseParam(productDetails: productDetails);
-
-      return await _iap.buyConsumable(purchaseParam: purchaseParam);
     } catch (e) {
-      print('Error buying credits: $e');
-      return false;
-    }
-  }
-
-  Future<bool> buyPremium() async {
-    try {
-      final bool available = await _iap.isAvailable();
-      if (!available) {
-        return false;
-      }
-
-      final ProductDetailsResponse response =
-          await _iap.queryProductDetails({_premiumId});
-      if (response.notFoundIDs.isNotEmpty) {
-        return false;
-      }
-
-      final productDetails = response.productDetails.first;
-      final purchaseParam = PurchaseParam(productDetails: productDetails);
-
-      return await _iap.buyNonConsumable(purchaseParam: purchaseParam);
-    } catch (e) {
-      print('Error buying premium: $e');
+      print('Satın alma başlatılırken hata: $e');
       return false;
     }
   }
 
   Future<bool> isPremium() async {
+    if (kDebugMode) {
+      return true; // Debug modunda her zaman premium
+    }
+
     try {
-      final purchases = await _iap.purchaseStream.first;
+      final purchases = await _inAppPurchase.purchaseStream.first;
       return purchases.any((purchase) =>
-          purchase.productID == _premiumId &&
+          purchase.productID == 'premium_membership' &&
           purchase.status == PurchaseStatus.purchased);
     } catch (e) {
-      print('Error checking premium status: $e');
+      print('Premium durumu kontrol edilirken hata: $e');
       return false;
     }
   }
 
-  Stream<PurchaseDetails> get purchaseStream => _purchaseController.stream;
+  void _handlePurchaseUpdates(List<PurchaseDetails> purchaseDetailsList) {
+    for (var purchaseDetails in purchaseDetailsList) {
+      if (purchaseDetails.status == PurchaseStatus.pending) {
+        print('Satın alma işlemi beklemede');
+      } else if (purchaseDetails.status == PurchaseStatus.error) {
+        print('Satın alma hatası: ${purchaseDetails.error}');
+      } else if (purchaseDetails.status == PurchaseStatus.purchased ||
+          purchaseDetails.status == PurchaseStatus.restored) {
+        _handleSuccessfulPurchase(purchaseDetails);
+      }
+
+      if (purchaseDetails.pendingCompletePurchase) {
+        _inAppPurchase.completePurchase(purchaseDetails);
+      }
+    }
+  }
+
+  Future<void> _handleSuccessfulPurchase(PurchaseDetails purchase) async {
+    print('Satın alma başarılı: ${purchase.productID}');
+  }
 
   void dispose() {
-    _subscription.cancel();
-    _purchaseController.close();
+    _subscription?.cancel();
   }
 }

@@ -8,7 +8,7 @@
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <application
         android:name=".MainApplication"
-        android:label="AI Çizim"
+        android:label="DreamDoodle"
         android:icon="@mipmap/launcher_icon"
         android:usesCleartextTraffic="true"
         android:allowBackup="true"
@@ -17,7 +17,7 @@
         <!-- AdMob uygulama ID -->
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="ca-app-pub-4716033743179769~2262603819"/>
+            android:value="ca-app-pub-xxxxxxxxxxxxxxxx~yyyyyyyyyy"/>
             
         <activity
             android:name=".MainActivity"
