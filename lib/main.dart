@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 import 'core/theme/app_theme.dart';
 import 'core/providers/locale_provider.dart';
 import 'core/services/ad_service.dart';
@@ -9,11 +11,17 @@ import 'features/drawing/presentation/pages/drawing_page.dart';
 import 'features/gallery/presentation/pages/gallery_page.dart';
 import 'features/settings/presentation/pages/settings_page.dart';
 import 'features/profile/presentation/pages/profile_page.dart';
+import 'features/profile/presentation/pages/firebase_test_page.dart';
 import 'core/services/user_service.dart';
 
 void main() async {
   try {
     WidgetsFlutterBinding.ensureInitialized();
+
+    // Firebase'i başlat
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
 
     // Initialize services with error handling
     try {
@@ -22,14 +30,12 @@ void main() async {
       await userService.checkFirstLogin();
     } catch (e) {
       print('UserService başlatma hatası: $e');
-      // Continue execution even if UserService fails
     }
 
     try {
       await AdService.initialize();
     } catch (e) {
       print('AdService başlatma hatası: $e');
-      // Continue execution even if AdService fails
     }
 
     runApp(

@@ -4,30 +4,117 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import '../../../../core/services/ad_manager.dart';
-import '../../../../core/services/purchase_service.dart';
-import '../../../../core/providers/locale_provider.dart';
 import '../../../../core/providers/purchase_provider.dart';
+import '../../../../core/providers/locale_provider.dart';
 import '../../../drawing/presentation/providers/ai_credits_provider.dart';
+import '../../domain/services/social_service.dart';
+import '../../domain/models/user_profile_model.dart';
+import '../../../../core/services/auth_service.dart';
+import '../providers/social_provider.dart';
+import '../widgets/profile_stats_widget.dart';
+import '../widgets/profile_header_widget.dart';
+import '../widgets/profile_drawings_grid.dart';
+import '../widgets/special_offers_widget.dart';
+import '../../../settings/presentation/pages/settings_page.dart';
 
-final productsProvider = FutureProvider<List<ProductDetails>>((ref) async {
-  final purchaseService = ref.read(purchaseServiceProvider);
-  return purchaseService.getProducts();
-});
+class ProfilePage extends ConsumerStatefulWidget {
+  const ProfilePage({super.key});
 
-class CreditPackage {
-  final int credits;
-  final ProductDetails productDetails;
-  final String Function(BuildContext) getDescription;
-
-  const CreditPackage({
-    required this.credits,
-    required this.productDetails,
-    required this.getDescription,
-  });
+  @override
+  ConsumerState<ProfilePage> createState() => _ProfilePageState();
 }
 
-class ProfilePage extends ConsumerWidget {
-  const ProfilePage({super.key});
+class _ProfilePageState extends ConsumerState<ProfilePage> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      appBar: AppBar(
+        title: const Text('Profil'),
+        backgroundColor: Colors.deepPurple,
+        elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings_outlined),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SettingsPage(),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          // Profil verilerini yenile
+          ref.refresh(currentUserProfileProvider);
+        },
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Column(
+            children: [
+              // Profil başlığı (avatar, isim, bio)
+              Consumer(
+                builder: (context, ref, child) {
+                  final profileAsync = ref.watch(currentUserProfileProvider);
+
+                  return profileAsync.when(
+                    data: (profile) => ProfileHeaderWidget(profile: profile),
+                    loading: () =>
+                        const Center(child: CircularProgressIndicator()),
+                    error: (error, stack) => Center(
+                      child: Text('Hata: $error'),
+                    ),
+                  );
+                },
+              ),
+
+              const SizedBox(height: 16),
+
+              // İstatistikler (çizimler, takipçiler, takip edilenler)
+              Consumer(
+                builder: (context, ref, child) {
+                  final profileAsync = ref.watch(currentUserProfileProvider);
+
+                  return profileAsync.when(
+                    data: (profile) => ProfileStatsWidget(profile: profile),
+                    loading: () => const SizedBox(height: 80),
+                    error: (_, __) => const SizedBox(height: 80),
+                  );
+                },
+              ),
+
+              const SizedBox(height: 16),
+
+              // Özel teklifler
+              const SpecialOffersWidget(),
+
+              const SizedBox(height: 16),
+
+              // Çizim galerisi
+              Consumer(
+                builder: (context, ref, child) {
+                  final profileAsync = ref.watch(currentUserProfileProvider);
+
+                  return profileAsync.when(
+                    data: (profile) => ProfileDrawingsGrid(userId: profile.id),
+                    loading: () =>
+                        const Center(child: CircularProgressIndicator()),
+                    error: (error, stack) => Center(
+                      child: Text('Hata: $error'),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
   void _handleWatchAd(WidgetRef ref) async {
     final adManager = AdManager();
@@ -43,7 +130,7 @@ class ProfilePage extends ConsumerWidget {
     final creditsNotifier = ref.read(aiCreditsProvider.notifier);
 
     try {
-      final success = await purchaseService.buyProduct(product);
+      final success = await purchaseService.buyProduct(product.id);
       if (success) {
         // Kredi miktarı ürün ID'sine göre belirlenir
         switch (product.id) {
@@ -64,268 +151,6 @@ class ProfilePage extends ConsumerWidget {
     } catch (e) {
       print('Satın alma hatası: $e');
     }
-  }
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context)!;
-    final credits = ref.watch(aiCreditsProvider);
-    final currentLocale = ref.watch(localeProvider);
-    final theme = Theme.of(context);
-    final products = ref.watch(productsProvider);
-
-    return Scaffold(
-      backgroundColor: const Color(0xFF1A1A2E),
-      body: CustomScrollView(
-        physics: const BouncingScrollPhysics(),
-        slivers: [
-          SliverAppBar.medium(
-            title: Text(l10n.profileTab),
-            backgroundColor: Colors.transparent,
-            foregroundColor: Colors.white,
-            centerTitle: true,
-            elevation: 0,
-            pinned: true,
-            actions: [
-              // Dil değiştirme butonu
-              Padding(
-                padding: const EdgeInsets.only(right: 16.0),
-                child: IconButton(
-                  icon: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      currentLocale.languageCode.toUpperCase(),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  onPressed: () {
-                    ref.read(localeProvider.notifier).toggleLocale();
-                  },
-                ),
-              ),
-            ],
-          ),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // Kredi Kartı
-                  Container(
-                    height: 160,
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [
-                          Color(0xFF16213E),
-                          Color(0xFF0F3460),
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(24),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFF16213E).withOpacity(0.3),
-                          blurRadius: 15,
-                          offset: const Offset(0, 6),
-                        ),
-                      ],
-                    ),
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: const Icon(
-                                Icons.auto_awesome,
-                                color: Colors.white,
-                                size: 24,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Text(
-                              l10n.remainingCredits,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 18,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const Spacer(),
-                        Text(
-                          l10n.credits(credits),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 36,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: -0.5,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Reklam İzle Butonu
-                  Container(
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [
-                          Color(0xFF533483),
-                          Color(0xFF0F3460),
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFF533483).withOpacity(0.2),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: () => _handleWatchAd(ref),
-                        borderRadius: BorderRadius.circular(20),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 24,
-                            vertical: 16,
-                          ),
-                          child: Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(10),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: const Icon(
-                                  Icons.play_circle_outline,
-                                  color: Colors.white,
-                                  size: 24,
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Text(
-                                  l10n.watchAdForCredit,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                              const Icon(
-                                Icons.arrow_forward_ios,
-                                color: Colors.white,
-                                size: 16,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 32),
-
-                  // Kredi Paketleri Grid
-                  products.when(
-                    data: (productList) => GridView.count(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      crossAxisCount: 2,
-                      mainAxisSpacing: 16,
-                      crossAxisSpacing: 16,
-                      childAspectRatio: 0.75,
-                      padding: const EdgeInsets.symmetric(horizontal: 4),
-                      children: [
-                        _CreditPackageCard(
-                          title: '10',
-                          subtitle: 'AI Çizim\nKredisi',
-                          price: productList
-                              .firstWhere((p) => p.id == 'credits_10')
-                              .price,
-                          product: productList
-                              .firstWhere((p) => p.id == 'credits_10'),
-                          onTap: (product) => _handlePurchase(ref, product),
-                        ),
-                        _CreditPackageCard(
-                          title: '25',
-                          subtitle: 'AI Çizim\nKredisi',
-                          price: productList
-                              .firstWhere((p) => p.id == 'credits_25')
-                              .price,
-                          product: productList
-                              .firstWhere((p) => p.id == 'credits_25'),
-                          isPopular: true,
-                          onTap: (product) => _handlePurchase(ref, product),
-                        ),
-                        _CreditPackageCard(
-                          title: '50',
-                          subtitle: 'AI Çizim\nKredisi',
-                          price: productList
-                              .firstWhere((p) => p.id == 'credits_50')
-                              .price,
-                          product: productList
-                              .firstWhere((p) => p.id == 'credits_50'),
-                          showBonus: true,
-                          bonusAmount: '+5',
-                          onTap: (product) => _handlePurchase(ref, product),
-                        ),
-                        _CreditPackageCard(
-                          title: '100',
-                          subtitle: 'AI Çizim\nKredisi',
-                          price: productList
-                              .firstWhere((p) => p.id == 'credits_100')
-                              .price,
-                          product: productList
-                              .firstWhere((p) => p.id == 'credits_100'),
-                          showBonus: true,
-                          bonusAmount: '+15',
-                          onTap: (product) => _handlePurchase(ref, product),
-                        ),
-                      ],
-                    ),
-                    loading: () =>
-                        const Center(child: CircularProgressIndicator()),
-                    error: (error, stack) => Center(
-                      child: Text(
-                        'Ürünler yüklenirken hata oluştu: $error',
-                        style: const TextStyle(color: Colors.white),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 32),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
   }
 }
 

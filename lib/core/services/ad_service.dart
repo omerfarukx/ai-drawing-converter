@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:yapayzeka_cizim/core/services/purchase_service.dart';
+import 'ad_manager.dart';
 
 class AdService {
   static const int _interstitialFrequency = 5; // Her 5 işlemde bir
@@ -105,7 +106,7 @@ class AdService {
 
   static Future<BannerAd> createBannerAd() async {
     return BannerAd(
-      adUnitId: bannerAdUnitId,
+      adUnitId: AdManager.bannerAdUnitId,
       size: AdSize.banner,
       request: const AdRequest(),
       listener: BannerAdListener(
@@ -120,10 +121,10 @@ class AdService {
 
   static Future<InterstitialAd?> loadInterstitialAd() async {
     try {
-      final completer = Completer<InterstitialAd>();
+      final completer = Completer<InterstitialAd?>();
 
-      InterstitialAd.load(
-        adUnitId: interstitialAdUnitId,
+      await InterstitialAd.load(
+        adUnitId: AdManager.interstitialAdUnitId,
         request: const AdRequest(),
         adLoadCallback: InterstitialAdLoadCallback(
           onAdLoaded: (ad) {
@@ -133,21 +134,20 @@ class AdService {
               },
               onAdFailedToShowFullScreenContent: (ad, error) {
                 ad.dispose();
-                debugPrint('Interstitial ad failed to show: $error');
               },
             );
             completer.complete(ad);
           },
           onAdFailedToLoad: (error) {
-            debugPrint('Interstitial ad failed to load: $error');
+            debugPrint('Geçiş reklamı yüklenemedi: $error');
             completer.complete(null);
           },
         ),
       );
 
-      return await completer.future;
+      return completer.future;
     } catch (e) {
-      debugPrint('Error loading interstitial ad: $e');
+      debugPrint('Geçiş reklamı yüklenirken hata: $e');
       return null;
     }
   }

@@ -2,6 +2,7 @@ plugins {
     id "com.android.application"
     id "kotlin-android"
     id "dev.flutter.flutter-gradle-plugin"
+    id 'com.google.gms.google-services'
 }
 
 def localProperties = new Properties()
@@ -19,12 +20,12 @@ if (flutterRoot == null) {
 
 def flutterVersionCode = localProperties.getProperty("flutter.versionCode")
 if (flutterVersionCode == null) {
-    flutterVersionCode = "1"
+    flutterVersionCode = "6"
 }
 
 def flutterVersionName = localProperties.getProperty("flutter.versionName")
 if (flutterVersionName == null) {
-    flutterVersionName = "1.0"
+    flutterVersionName = "3.0.2"
 }
 
 def keystoreProperties = new Properties()
@@ -35,12 +36,12 @@ if (keystorePropertiesFile.exists()) {
 
 android {
     namespace "com.yapayzeka.cizim"
-    compileSdkVersion 34
+    compileSdkVersion flutter.compileSdkVersion
     ndkVersion flutter.ndkVersion
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_17
-        targetCompatibility JavaVersion.VERSION_17
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
 
     kotlinOptions {
@@ -53,8 +54,8 @@ android {
 
     defaultConfig {
         applicationId "com.yapayzeka.cizim"
-        minSdkVersion 24
-        targetSdkVersion 34
+        minSdkVersion 21
+        targetSdkVersion flutter.targetSdkVersion
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
         multiDexEnabled true
@@ -84,7 +85,7 @@ flutter {
 
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
-    implementation "com.google.android.gms:play-services-ads:22.4.0"
+    implementation "com.google.android.gms:play-services-ads:22.5.0"
     implementation "com.google.android.gms:play-services-basement:18.2.0"
     implementation "androidx.multidex:multidex:2.0.1"
 }

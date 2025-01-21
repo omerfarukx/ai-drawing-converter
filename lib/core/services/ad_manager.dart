@@ -14,68 +14,90 @@ class AdManager {
   AdManager._internal();
 
   RewardedAd? _rewardedAd;
+  bool _isRewardedAdLoading = false;
 
   // Test reklam ID'leri
   static const String _testRewardedAdUnitId =
       'ca-app-pub-3940256099942544/5224354917';
+  static const String _testBannerAdUnitId =
+      'ca-app-pub-3940256099942544/6300978111';
+  static const String _testInterstitialAdUnitId =
+      'ca-app-pub-3940256099942544/1033173712';
+
   // Gerçek reklam ID'leri
   static const String _prodRewardedAdUnitId =
-      'YOUR_REWARDED_AD_UNIT_ID'; // TODO: Gerçek reklam ID'nizi ekleyin
+      'ca-app-pub-4716033743179769/863644047';
+  static const String _prodBannerAdUnitId =
+      'ca-app-pub-4716033743179769/5155288635';
+  static const String _prodInterstitialAdUnitId =
+      'ca-app-pub-4716033743179769/417058185';
 
-  String get _rewardedAdUnitId {
+  static String get rewardedAdUnitId {
     if (kDebugMode) {
       return _testRewardedAdUnitId;
-    } else {
-      return _prodRewardedAdUnitId;
     }
+    return _prodRewardedAdUnitId;
+  }
+
+  static String get bannerAdUnitId {
+    if (kDebugMode) {
+      return _testBannerAdUnitId;
+    }
+    return _prodBannerAdUnitId;
+  }
+
+  static String get interstitialAdUnitId {
+    if (kDebugMode) {
+      return _testInterstitialAdUnitId;
+    }
+    return _prodInterstitialAdUnitId;
   }
 
   Future<void> initialize() async {
-    await MobileAds.instance.initialize();
-    await _loadRewardedAd();
-
-    // Test cihazları ekleyin (debug modunda)
-    if (kDebugMode) {
-      MobileAds.instance.updateRequestConfiguration(
-        RequestConfiguration(testDeviceIds: [
-          'TEST_DEVICE_ID'
-        ]), // TODO: Test cihaz ID'nizi ekleyin
-      );
+    if (!kDebugMode) {
+      await MobileAds.instance.initialize();
+      await _loadRewardedAd();
     }
   }
 
   Future<void> _loadRewardedAd() async {
+    if (_isRewardedAdLoading || _rewardedAd != null) return;
+
+    _isRewardedAdLoading = true;
+
     try {
       await RewardedAd.load(
-        adUnitId: _rewardedAdUnitId,
+        adUnitId: rewardedAdUnitId,
         request: const AdRequest(),
         rewardedAdLoadCallback: RewardedAdLoadCallback(
           onAdLoaded: (ad) {
             _rewardedAd = ad;
-            print('Reklam başarıyla yüklendi');
+            _isRewardedAdLoading = false;
           },
           onAdFailedToLoad: (error) {
-            print('Reklam yüklenemedi: $error');
+            debugPrint('Reklam yüklenemedi: $error');
             _rewardedAd = null;
+            _isRewardedAdLoading = false;
           },
         ),
       );
     } catch (e) {
-      print('Reklam yüklenirken hata: $e');
+      debugPrint('Reklam yüklenirken hata: $e');
       _rewardedAd = null;
+      _isRewardedAdLoading = false;
     }
   }
 
   Future<bool> showRewardedAd() async {
+    if (kDebugMode) {
+      // Debug modunda her zaman başarılı
+      debugPrint('Debug modunda test reklam gösterimi');
+      return true;
+    }
+
     if (_rewardedAd == null) {
       await _loadRewardedAd();
-      if (_rewardedAd == null) {
-        if (kDebugMode) {
-          print('Debug modunda test kredisi veriliyor');
-          return true; // Debug modunda her zaman kredi ver
-        }
-        return false;
-      }
+      if (_rewardedAd == null) return false;
     }
 
     bool isRewarded = false;
@@ -86,14 +108,12 @@ class AdManager {
         },
       );
     } catch (e) {
-      print('Reklam gösterilirken hata: $e');
-      if (kDebugMode) {
-        isRewarded = true; // Debug modunda hata olsa bile kredi ver
-      }
+      debugPrint('Reklam gösterilirken hata: $e');
+      return false;
+    } finally {
+      _rewardedAd = null;
+      _loadRewardedAd(); // Bir sonraki gösterim için yeni reklam yükle
     }
-
-    _rewardedAd = null;
-    await _loadRewardedAd();
 
     return isRewarded;
   }
@@ -103,13 +123,18 @@ class AdManager {
   }
 
   static Future<void> showInterstitialAd(WidgetRef ref) async {
+    if (kDebugMode) {
+      debugPrint('Debug modunda test geçiş reklamı gösterimi');
+      return;
+    }
+
     try {
       final ad = await AdService.loadInterstitialAd();
       if (ad != null) {
         await ad.show();
       }
     } catch (e) {
-      debugPrint('Error showing interstitial ad: $e');
+      debugPrint('Geçiş reklamı gösterilirken hata: $e');
     }
   }
 }

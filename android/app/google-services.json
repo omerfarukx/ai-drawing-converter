@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "1060467981154",
+    "project_id": "yapayzeka-cizim",
+    "storage_bucket": "yapayzeka-cizim.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1060467981154:android:1d374467e7cf7e90298a3b",
+        "android_client_info": {
+          "package_name": "com.example.yapayzeka_cizim"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBqvTLxaNozScuh0JIwJJTxwiBPPS-W_T4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1060467981154:android:19dba6fa2687b9fa298a3b",
+        "android_client_info": {
+          "package_name": "com.yapayzeka.cizim"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBqvTLxaNozScuh0JIwJJTxwiBPPS-W_T4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -17,22 +17,19 @@ class PurchaseService {
   List<ProductDetails> _products = [];
 
   Future<void> initialize() async {
-    if (kDebugMode) {
-      print('Debug modunda satın alma sistemi başlatıldı');
-      return;
-    }
+    if (!kDebugMode) {
+      final bool available = await _inAppPurchase.isAvailable();
+      if (!available) {
+        debugPrint('Uygulama içi satın alma kullanılamıyor');
+        return;
+      }
 
-    final bool available = await _inAppPurchase.isAvailable();
-    if (!available) {
-      print('Uygulama içi satın alma kullanılamıyor');
-      return;
+      _subscription = _inAppPurchase.purchaseStream.listen(
+        _handlePurchaseUpdates,
+        onDone: () => _subscription?.cancel(),
+        onError: (error) => debugPrint('Satın alma hatası: $error'),
+      );
     }
-
-    _subscription = _inAppPurchase.purchaseStream.listen(
-      _handlePurchaseUpdates,
-      onDone: () => _subscription?.cancel(),
-      onError: (error) => print('Satın alma hatası: $error'),
-    );
 
     await getProducts();
   }
@@ -45,83 +42,67 @@ class PurchaseService {
           id: 'credits_10',
           title: '10 AI Çizim Kredisi',
           description: 'AI ile çizim yapmak için 10 kredi',
-          price: '₺34,99',
-          rawPrice: 34.99,
+          price: '₺29.99',
+          rawPrice: 29.99,
           currencyCode: 'TRY',
         ),
         ProductDetails(
           id: 'credits_25',
           title: '25 AI Çizim Kredisi',
           description: 'AI ile çizim yapmak için 25 kredi',
-          price: '₺50,00',
-          rawPrice: 50.00,
+          price: '₺59.99',
+          rawPrice: 59.99,
           currencyCode: 'TRY',
         ),
         ProductDetails(
           id: 'credits_50',
           title: '50+5 AI Çizim Kredisi',
           description: 'AI ile çizim yapmak için 50+5 bonus kredi',
-          price: '₺99,00',
-          rawPrice: 99.00,
-          currencyCode: 'TRY',
-        ),
-        ProductDetails(
-          id: 'credits_100',
-          title: '100+15 AI Çizim Kredisi',
-          description: 'AI ile çizim yapmak için 100+15 bonus kredi',
-          price: '₺200,00',
-          rawPrice: 200.00,
+          price: '₺99.99',
+          rawPrice: 99.99,
           currencyCode: 'TRY',
         ),
       ];
     }
 
     try {
-      final Set<String> ids = {
+      const Set<String> kIds = {
         'credits_10',
         'credits_25',
         'credits_50',
-        'credits_100',
-        'premium_membership',
       };
 
       final ProductDetailsResponse response =
-          await _inAppPurchase.queryProductDetails(ids);
-
-      if (response.notFoundIDs.isNotEmpty) {
-        print('Bulunamayan ürünler: ${response.notFoundIDs}');
-      }
-
-      _products = response.productDetails;
-      return _products;
+          await _inAppPurchase.queryProductDetails(kIds);
+      return response.productDetails;
     } catch (e) {
-      print('Ürünler yüklenirken hata: $e');
+      debugPrint('Ürünler yüklenirken hata: $e');
       return [];
     }
   }
 
-  Future<bool> buyProduct(ProductDetails product) async {
+  Future<bool> buyProduct(String productId) async {
     if (kDebugMode) {
-      print('Debug modunda test satın alma: ${product.id}');
+      // Debug modunda her zaman başarılı
+      debugPrint('Debug modunda test satın alma: $productId');
       return true;
     }
 
     try {
-      final PurchaseParam purchaseParam = PurchaseParam(
-        productDetails: product,
-      );
-
-      if (product.id == 'premium_membership') {
-        return await _inAppPurchase.buyNonConsumable(
-          purchaseParam: purchaseParam,
-        );
-      } else {
-        return await _inAppPurchase.buyConsumable(
-          purchaseParam: purchaseParam,
-        );
+      final ProductDetailsResponse response =
+          await _inAppPurchase.queryProductDetails({productId});
+      if (response.notFoundIDs.isNotEmpty) {
+        return false;
       }
+
+      final ProductDetails productDetails = response.productDetails.first;
+      final PurchaseParam purchaseParam =
+          PurchaseParam(productDetails: productDetails);
+
+      await _inAppPurchase.buyConsumable(purchaseParam: purchaseParam);
+      return true;
     } catch (e) {
-      print('Satın alma başlatılırken hata: $e');
+      debugPrint('Satın alma başlatılırken hata: $e');
       return false;
     }
   }
@@ -145,9 +126,9 @@ class PurchaseService {
   void _handlePurchaseUpdates(List<PurchaseDetails> purchaseDetailsList) {
     for (var purchaseDetails in purchaseDetailsList) {
       if (purchaseDetails.status == PurchaseStatus.pending) {
-        print('Satın alma işlemi beklemede');
+        debugPrint('Satın alma işlemi beklemede');
       } else if (purchaseDetails.status == PurchaseStatus.error) {
-        print('Satın alma hatası: ${purchaseDetails.error}');
+        debugPrint('Satın alma hatası: ${purchaseDetails.error}');
       } else if (purchaseDetails.status == PurchaseStatus.purchased ||
           purchaseDetails.status == PurchaseStatus.restored) {
         _handleSuccessfulPurchase(purchaseDetails);
@@ -160,7 +141,7 @@ class PurchaseService {
   }
 
   Future<void> _handleSuccessfulPurchase(PurchaseDetails purchase) async {
-    print('Satın alma başarılı: ${purchase.productID}');
+    debugPrint('Satın alma başarılı: ${purchase.productID}');
   }
 
   void dispose() {
