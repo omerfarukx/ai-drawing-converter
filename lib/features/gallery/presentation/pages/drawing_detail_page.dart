@@ -6,6 +6,8 @@ import 'package:image_gallery_saver/image_gallery_saver.dart';
 import '../../domain/models/drawing.dart';
 import '../../domain/repositories/gallery_repository.dart' as repo;
 import '../providers/gallery_provider.dart';
+import '../providers/share_drawing_provider.dart';
+import '../widgets/share_drawing_dialog.dart';
 
 class DrawingDetailPage extends ConsumerWidget {
   final String id;
@@ -123,6 +125,23 @@ class DrawingDetailPage extends ConsumerWidget {
                     child: IconButton(
                       icon: const Icon(Icons.download_outlined),
                       onPressed: () => _downloadImage(context, drawing.path),
+                    ),
+                  ),
+                  Container(
+                    margin: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF16213E),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: IconButton(
+                      icon: const Icon(Icons.share_outlined),
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (context) =>
+                              ShareDrawingDialog(drawing: drawing),
+                        );
+                      },
                     ),
                   ),
                   Container(

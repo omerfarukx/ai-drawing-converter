@@ -1,6 +1,8 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_share/flutter_share.dart';
 import 'package:uuid/uuid.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 class UserService {
   static const String _firstLoginKey = 'first_login';
@@ -12,6 +14,8 @@ class UserService {
 
   late final SharedPreferences _prefs;
   final _uuid = const Uuid();
+  final _auth = FirebaseAuth.instance;
+  final _googleSignIn = GoogleSignIn();
 
   // Singleton pattern
   static final UserService _instance = UserService._internal();
@@ -22,6 +26,39 @@ class UserService {
   // Initialize
   Future<void> initialize() async {
     _prefs = await SharedPreferences.getInstance();
+  }
+
+  // Mevcut kullanıcıyı getir
+  User? getCurrentUser() {
+    return _auth.currentUser;
+  }
+
+  // Google ile giriş yap
+  Future<User?> signInWithGoogle() async {
+    try {
+      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      if (googleUser == null) return null;
+
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
+
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      final userCredential = await _auth.signInWithCredential(credential);
+      return userCredential.user;
+    } catch (e) {
+      print('Google ile giriş hatası: $e');
+      return null;
+    }
+  }
+
+  // Çıkış yap
+  Future<void> signOut() async {
+    await _auth.signOut();
+    await _googleSignIn.signOut();
   }
 
   // İlk giriş kontrolü ve kredi verme
