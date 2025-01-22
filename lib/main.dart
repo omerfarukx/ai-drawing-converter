@@ -9,6 +9,7 @@ import 'core/providers/locale_provider.dart';
 import 'core/services/ad_service.dart';
 import 'features/drawing/presentation/pages/drawing_page.dart';
 import 'features/gallery/presentation/pages/gallery_page.dart';
+import 'features/gallery/presentation/pages/discover_page.dart';
 import 'features/settings/presentation/pages/settings_page.dart';
 import 'features/profile/presentation/pages/profile_page.dart';
 import 'features/profile/presentation/pages/firebase_test_page.dart';
@@ -131,10 +132,11 @@ class MainPage extends ConsumerStatefulWidget {
 class _MainPageState extends ConsumerState<MainPage> {
   int _selectedIndex = 0;
 
-  final List<Widget> _pages = const [
-    DrawingPage(),
-    GalleryPage(),
-    ProfilePage(),
+  final List<Widget> _pages = [
+    const DrawingPage(),
+    const GalleryPage(),
+    const DiscoverPage(),
+    const ProfilePage(),
   ];
 
   @override
@@ -173,10 +175,16 @@ class _MainPageState extends ConsumerState<MainPage> {
                   onTap: () => setState(() => _selectedIndex = 1),
                 ),
                 _NavbarItem(
-                  icon: Icons.person_outline,
-                  label: l10n.profileTab,
+                  icon: Icons.explore_outlined,
+                  label: 'Keşfet',
                   isSelected: _selectedIndex == 2,
                   onTap: () => setState(() => _selectedIndex = 2),
+                ),
+                _NavbarItem(
+                  icon: Icons.person_outline,
+                  label: l10n.profileTab,
+                  isSelected: _selectedIndex == 3,
+                  onTap: () => setState(() => _selectedIndex = 3),
                 ),
               ],
             ),

@@ -9,6 +9,36 @@ class SharedDrawingRepository {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final String _collection = 'shared_drawings';
 
+  // Koleksiyonu ve indeksi oluştur
+  Future<void> initializeCollection() async {
+    try {
+      // Koleksiyonun varlığını kontrol et
+      final collectionRef = _firestore.collection(_collection);
+      final snapshot = await collectionRef.limit(1).get();
+
+      // Koleksiyon boşsa örnek bir döküman ekle ve sil
+      if (snapshot.docs.isEmpty) {
+        final docRef = await collectionRef.add({
+          'userId': 'temp',
+          'userName': 'temp',
+          'userProfileImage': '',
+          'imageUrl': '',
+          'title': 'temp',
+          'description': '',
+          'likes': 0,
+          'comments': 0,
+          'isPublic': true,
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+
+        // Örnek dökümanı sil
+        await docRef.delete();
+      }
+    } catch (e) {
+      print('Koleksiyon başlatma hatası: $e');
+    }
+  }
+
   // Çizim paylaş
   Future<SharedDrawing> shareDrawing({
     required String userId,
@@ -20,6 +50,9 @@ class SharedDrawingRepository {
     bool isPublic = true,
   }) async {
     try {
+      // Koleksiyonu başlat
+      await initializeCollection();
+
       final data = {
         'userId': userId,
         'userName': userName,

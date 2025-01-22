@@ -26,13 +26,16 @@ class SharedDrawing with _$SharedDrawing {
 
   factory SharedDrawing.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
+
+    // Timestamp'i DateTime'a dönüştür
+    final createdAtTimestamp = data['createdAt'] as Timestamp;
+    final updatedAtTimestamp = data['updatedAt'] as Timestamp?;
+
     return SharedDrawing.fromJson({
       'id': doc.id,
       ...data,
-      'createdAt': (data['createdAt'] as Timestamp).toDate(),
-      'updatedAt': data['updatedAt'] != null
-          ? (data['updatedAt'] as Timestamp).toDate()
-          : null,
+      'createdAt': createdAtTimestamp.toDate().toIso8601String(),
+      'updatedAt': updatedAtTimestamp?.toDate().toIso8601String(),
     });
   }
 }
