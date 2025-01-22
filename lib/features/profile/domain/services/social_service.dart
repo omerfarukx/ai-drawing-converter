@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/services/auth_service.dart';
 import '../../../../core/services/firestore_service.dart';
 import '../models/user_profile_model.dart';
+import 'package:uuid/uuid.dart';
 
 final socialServiceProvider = Provider((ref) => SocialService(
       ref.read(authServiceProvider),
@@ -13,6 +14,13 @@ class SocialService {
   final FirestoreService _firestoreService;
 
   SocialService(this._authService, this._firestoreService);
+
+  String _generateUsername() {
+    // 8 karakterlik rastgele bir kullanıcı adı oluştur
+    const uuid = Uuid();
+    final randomString = uuid.v4().substring(0, 8);
+    return 'user_$randomString';
+  }
 
   // Kullanıcı profili getirme
   Future<UserProfile> getUserProfile(String userId) async {
@@ -29,13 +37,32 @@ class SocialService {
       // Profil bulunamazsa yeni profil oluştur
       final newProfile = UserProfile(
         id: userId,
-        username: 'user_$userId',
+        username: _generateUsername(),
         displayName: 'Yeni Kullanıcı',
       );
       await _firestoreService.updateUserProfile(newProfile);
       return newProfile;
     } catch (e) {
       throw 'Profil alınamadı: $e';
+    }
+  }
+
+  // Kullanıcı adı güncelleme
+  Future<void> updateUsername(String newUsername) async {
+    try {
+      final currentUserId = _authService.currentUser?.uid;
+      if (currentUserId == null) throw 'Oturum açmanız gerekiyor';
+
+      // Kullanıcı adının benzersiz olup olmadığını kontrol et
+      final isUsernameTaken =
+          await _firestoreService.isUsernameTaken(newUsername);
+      if (isUsernameTaken) {
+        throw 'Bu kullanıcı adı zaten kullanılıyor';
+      }
+
+      await updateProfile(username: newUsername);
+    } catch (e) {
+      throw 'Kullanıcı adı güncellenemedi: $e';
     }
   }
 

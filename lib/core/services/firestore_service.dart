@@ -7,6 +7,19 @@ final firestoreServiceProvider = Provider((ref) => FirestoreService());
 class FirestoreService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
+  // Kullanıcı adının kullanılıp kullanılmadığını kontrol et
+  Future<bool> isUsernameTaken(String username) async {
+    try {
+      final querySnapshot = await _firestore
+          .collection('users')
+          .where('username', isEqualTo: username)
+          .get();
+      return querySnapshot.docs.isNotEmpty;
+    } catch (e) {
+      throw 'Kullanıcı adı kontrolü yapılırken hata oluştu: $e';
+    }
+  }
+
   // Kullanıcı profili oluştur/güncelle
   Future<void> updateUserProfile(UserProfile profile) async {
     try {
