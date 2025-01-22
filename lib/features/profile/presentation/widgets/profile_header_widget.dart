@@ -1,6 +1,10 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../domain/models/user_profile_model.dart';
+import '../../domain/services/social_service.dart';
+import '../../../../core/services/storage_service.dart';
 import '../../../drawing/presentation/providers/ai_credits_provider.dart';
 
 class ProfileHeaderWidget extends ConsumerWidget {
@@ -10,6 +14,41 @@ class ProfileHeaderWidget extends ConsumerWidget {
     super.key,
     required this.profile,
   });
+
+  Future<void> _handleImageUpload(BuildContext context, WidgetRef ref) async {
+    try {
+      final picker = ImagePicker();
+      final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+
+      if (image == null) return;
+
+      final storageService = ref.read(storageServiceProvider);
+      final socialService = ref.read(socialServiceProvider);
+
+      // Yükleme başladı bildirimi
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Fotoğraf yükleniyor...')),
+      );
+
+      // Fotoğrafı Storage'a yükle
+      final imageUrl = await storageService.uploadProfileImage(
+        profile.id,
+        File(image.path),
+      );
+
+      // Profili güncelle
+      await socialService.updateProfile(profileImage: imageUrl);
+
+      // Başarılı bildirimi
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Profil fotoğrafı güncellendi')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Hata: $e')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -90,16 +129,19 @@ class ProfileHeaderWidget extends ConsumerWidget {
               Positioned(
                 right: 0,
                 bottom: 0,
-                child: Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.add_a_photo,
-                    color: Colors.deepPurple,
-                    size: 20,
+                child: GestureDetector(
+                  onTap: () => _handleImageUpload(context, ref),
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.add_a_photo,
+                      color: Colors.deepPurple,
+                      size: 20,
+                    ),
                   ),
                 ),
               ),
