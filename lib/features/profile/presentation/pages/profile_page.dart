@@ -16,103 +16,105 @@ import '../widgets/profile_header_widget.dart';
 import '../widgets/profile_drawings_grid.dart';
 import '../widgets/special_offers_widget.dart';
 import '../../../settings/presentation/pages/settings_page.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../auth/domain/models/auth_state.dart';
+import '../../../auth/domain/models/user.dart';
 
-class ProfilePage extends ConsumerStatefulWidget {
+class ProfilePage extends ConsumerWidget {
   const ProfilePage({super.key});
 
   @override
-  ConsumerState<ProfilePage> createState() => _ProfilePageState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final authState = ref.watch(authControllerProvider);
+    final profileAsync = ref.watch(currentUserProfileProvider);
 
-class _ProfilePageState extends ConsumerState<ProfilePage> {
-  @override
-  Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text('Profil'),
-        backgroundColor: Colors.deepPurple,
-        elevation: 0,
+        title: Text(l10n.profileTitle),
         actions: [
           IconButton(
-            icon: const Icon(Icons.settings_outlined),
+            icon: const Icon(Icons.logout),
             onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const SettingsPage(),
-                ),
-              );
+              ref.read(authControllerProvider.notifier).signOut();
             },
+            tooltip: l10n.logout,
           ),
         ],
       ),
-      body: RefreshIndicator(
-        onRefresh: () async {
-          // Profil verilerini yenile
-          ref.refresh(currentUserProfileProvider);
-        },
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
+      body: profileAsync.when(
+        loading: () => const Center(
+          child: CircularProgressIndicator(),
+        ),
+        error: (error, stackTrace) => Center(
           child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Profil başlığı (avatar, isim, bio)
-              Consumer(
-                builder: (context, ref, child) {
-                  final profileAsync = ref.watch(currentUserProfileProvider);
-
-                  return profileAsync.when(
-                    data: (profile) => ProfileHeaderWidget(profile: profile),
-                    loading: () =>
-                        const Center(child: CircularProgressIndicator()),
-                    error: (error, stack) => Center(
-                      child: Text('Hata: $error'),
-                    ),
-                  );
-                },
-              ),
-
+              Text('Hata: $error'),
               const SizedBox(height: 16),
-
-              // İstatistikler (çizimler, takipçiler, takip edilenler)
-              Consumer(
-                builder: (context, ref, child) {
-                  final profileAsync = ref.watch(currentUserProfileProvider);
-
-                  return profileAsync.when(
-                    data: (profile) => ProfileStatsWidget(profile: profile),
-                    loading: () => const SizedBox(height: 80),
-                    error: (_, __) => const SizedBox(height: 80),
-                  );
+              ElevatedButton(
+                onPressed: () {
+                  ref.invalidate(currentUserProfileProvider);
                 },
-              ),
-
-              const SizedBox(height: 16),
-
-              // Özel teklifler
-              const SpecialOffersWidget(),
-
-              const SizedBox(height: 16),
-
-              // Çizim galerisi
-              Consumer(
-                builder: (context, ref, child) {
-                  final profileAsync = ref.watch(currentUserProfileProvider);
-
-                  return profileAsync.when(
-                    data: (profile) => ProfileDrawingsGrid(userId: profile.id),
-                    loading: () =>
-                        const Center(child: CircularProgressIndicator()),
-                    error: (error, stack) => Center(
-                      child: Text('Hata: $error'),
-                    ),
-                  );
-                },
+                child: const Text('Tekrar Dene'),
               ),
             ],
           ),
         ),
+        data: (profile) => RefreshIndicator(
+          onRefresh: () async {
+            ref.invalidate(currentUserProfileProvider);
+          },
+          child: ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              ProfileHeaderWidget(profile: profile),
+              const SizedBox(height: 24),
+              ProfileStatsWidget(profile: profile),
+              const SizedBox(height: 24),
+              _buildActionButtons(context, l10n),
+              const SizedBox(height: 32),
+              const Divider(),
+              const SizedBox(height: 16),
+              Text(
+                l10n.drawings,
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 16),
+              ProfileDrawingsGrid(userId: profile.id),
+              const SizedBox(height: 32),
+              SpecialOffersWidget(),
+            ],
+          ),
+        ),
       ),
+    );
+  }
+
+  Widget _buildActionButtons(BuildContext context, AppLocalizations l10n) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: [
+        OutlinedButton.icon(
+          onPressed: () {
+            // TODO: Profili düzenleme sayfasına git
+          },
+          icon: const Icon(Icons.edit),
+          label: Text(l10n.editProfile),
+        ),
+        OutlinedButton.icon(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const SettingsPage(),
+              ),
+            );
+          },
+          icon: const Icon(Icons.settings),
+          label: Text(l10n.settings),
+        ),
+      ],
     );
   }
 

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_app_check/firebase_app_check.dart';
 import 'firebase_options.dart';
 import 'core/theme/app_theme.dart';
 import 'core/providers/locale_provider.dart';
@@ -12,7 +13,9 @@ import 'features/gallery/presentation/pages/gallery_page.dart';
 import 'features/gallery/presentation/pages/discover_page.dart';
 import 'features/settings/presentation/pages/settings_page.dart';
 import 'features/profile/presentation/pages/profile_page.dart';
-import 'features/profile/presentation/pages/firebase_test_page.dart';
+import 'features/auth/presentation/pages/login_page.dart';
+import 'features/auth/presentation/providers/auth_provider.dart';
+import 'features/auth/domain/models/auth_state.dart';
 import 'core/services/user_service.dart';
 
 void main() async {
@@ -22,6 +25,11 @@ void main() async {
     // Firebase'i başlat
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
+    );
+
+    // Firebase App Check'i başlat
+    await FirebaseAppCheck.instance.activate(
+      androidProvider: AndroidProvider.debug,
     );
 
     // Initialize services with error handling
@@ -99,6 +107,7 @@ class MyApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final locale = ref.watch(localeProvider);
+    final authState = ref.watch(authStateProvider);
 
     return MaterialApp(
       title: 'AI Çizim',
@@ -117,7 +126,76 @@ class MyApp extends ConsumerWidget {
         Locale('en'),
         Locale('tr'),
       ],
-      home: const MainPage(),
+      home: authState.when(
+        data: (state) => switch (state) {
+          AuthAuthenticated(:final user) => const MainPage(),
+          AuthLoading() => const LoadingPage(),
+          _ => const LoginPage(),
+        },
+        loading: () => const LoadingPage(),
+        error: (error, stackTrace) => ErrorPage(error: error),
+      ),
+    );
+  }
+}
+
+class LoadingPage extends StatelessWidget {
+  const LoadingPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      body: Center(
+        child: CircularProgressIndicator(),
+      ),
+    );
+  }
+}
+
+class ErrorPage extends StatelessWidget {
+  final Object error;
+
+  const ErrorPage({super.key, required this.error});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.error_outline,
+                color: Colors.red,
+                size: 48,
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Bir hata oluştu',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Hata: $error',
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.red),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () {
+                  main();
+                },
+                child: const Text('Tekrar Dene'),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -176,7 +254,7 @@ class _MainPageState extends ConsumerState<MainPage> {
                 ),
                 _NavbarItem(
                   icon: Icons.explore_outlined,
-                  label: 'Keşfet',
+                  label: l10n.discoverTab,
                   isSelected: _selectedIndex == 2,
                   onTap: () => setState(() => _selectedIndex = 2),
                 ),

@@ -35,11 +35,11 @@ class SocialService {
       }
 
       // Profil bulunamazsa yeni profil oluştur
-      final newProfile = UserProfile(
+      final newProfile = UserProfile.defaultProfile(
         id: userId,
         username: _generateUsername(),
-        displayName: 'Yeni Kullanıcı',
       );
+
       await _firestoreService.updateUserProfile(newProfile);
       return newProfile;
     } catch (e) {

@@ -21,4 +21,15 @@ class UserProfile with _$UserProfile {
 
   factory UserProfile.fromJson(Map<String, dynamic> json) =>
       _$UserProfileFromJson(json);
+
+  factory UserProfile.defaultProfile({
+    required String id,
+    required String username,
+  }) =>
+      UserProfile(
+        id: id,
+        username: username,
+        displayName: 'Yeni Kullanıcı',
+        bio: 'Merhaba! Ben yeni bir kullanıcıyım.',
+      );
 }

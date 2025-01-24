@@ -6,6 +6,7 @@ import '../../domain/models/user_profile_model.dart';
 import '../../domain/services/social_service.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../../drawing/presentation/providers/ai_credits_provider.dart';
+import '../providers/social_provider.dart';
 
 class ProfileHeaderWidget extends ConsumerWidget {
   final UserProfile profile;
@@ -15,230 +16,6 @@ class ProfileHeaderWidget extends ConsumerWidget {
     required this.profile,
   });
 
-  Future<void> _handleImageUpload(BuildContext context, WidgetRef ref) async {
-    try {
-      final picker = ImagePicker();
-      final XFile? image = await picker.pickImage(source: ImageSource.gallery);
-
-      if (image == null) return;
-
-      final storageService = ref.read(storageServiceProvider);
-      final socialService = ref.read(socialServiceProvider);
-
-      // Yükleme başladı bildirimi
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Fotoğraf yükleniyor...')),
-      );
-
-      // Fotoğrafı Storage'a yükle
-      final imageUrl = await storageService.uploadProfileImage(
-        profile.id,
-        File(image.path),
-      );
-
-      // Profili güncelle
-      await socialService.updateProfile(profileImage: imageUrl);
-
-      // Başarılı bildirimi
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Profil fotoğrafı güncellendi')),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Hata: $e')),
-      );
-    }
-  }
-
-  Future<void> _handleUsernameEdit(BuildContext context, WidgetRef ref) async {
-    final TextEditingController controller =
-        TextEditingController(text: profile.username);
-    final formKey = GlobalKey<FormState>();
-
-    final newUsername = await showDialog<String>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Kullanıcı Adını Düzenle'),
-        content: Form(
-          key: formKey,
-          child: TextFormField(
-            controller: controller,
-            decoration: const InputDecoration(
-              labelText: 'Kullanıcı Adı',
-              hintText: 'Yeni kullanıcı adını girin',
-            ),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Kullanıcı adı boş olamaz';
-              }
-              if (value.length < 3) {
-                return 'Kullanıcı adı en az 3 karakter olmalı';
-              }
-              if (!RegExp(r'^[a-zA-Z0-9_]+$').hasMatch(value)) {
-                return 'Sadece harf, rakam ve alt çizgi kullanılabilir';
-              }
-              return null;
-            },
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('İptal'),
-          ),
-          TextButton(
-            onPressed: () {
-              if (formKey.currentState!.validate()) {
-                Navigator.pop(context, controller.text);
-              }
-            },
-            child: const Text('Kaydet'),
-          ),
-        ],
-      ),
-    );
-
-    if (newUsername != null && newUsername != profile.username) {
-      try {
-        final socialService = ref.read(socialServiceProvider);
-        await socialService.updateUsername(newUsername);
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Kullanıcı adı güncellendi')),
-        );
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Hata: $e')),
-        );
-      }
-    }
-  }
-
-  // İsim düzenleme işleyicisi
-  Future<void> _handleDisplayNameEdit(
-      BuildContext context, WidgetRef ref) async {
-    final TextEditingController controller =
-        TextEditingController(text: profile.displayName);
-    final formKey = GlobalKey<FormState>();
-
-    final newDisplayName = await showDialog<String>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('İsmi Düzenle'),
-        content: Form(
-          key: formKey,
-          child: TextFormField(
-            controller: controller,
-            decoration: const InputDecoration(
-              labelText: 'İsim',
-              hintText: 'Yeni isminizi girin',
-            ),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'İsim boş olamaz';
-              }
-              if (value.length < 2) {
-                return 'İsim en az 2 karakter olmalı';
-              }
-              return null;
-            },
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('İptal'),
-          ),
-          TextButton(
-            onPressed: () {
-              if (formKey.currentState!.validate()) {
-                Navigator.pop(context, controller.text);
-              }
-            },
-            child: const Text('Kaydet'),
-          ),
-        ],
-      ),
-    );
-
-    if (newDisplayName != null && newDisplayName != profile.displayName) {
-      try {
-        final socialService = ref.read(socialServiceProvider);
-        await socialService.updateProfile(displayName: newDisplayName);
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('İsim güncellendi')),
-        );
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Hata: $e')),
-        );
-      }
-    }
-  }
-
-  // Bio düzenleme işleyicisi
-  Future<void> _handleBioEdit(BuildContext context, WidgetRef ref) async {
-    final TextEditingController controller =
-        TextEditingController(text: profile.bio);
-    final formKey = GlobalKey<FormState>();
-
-    final newBio = await showDialog<String>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Bio Düzenle'),
-        content: Form(
-          key: formKey,
-          child: TextFormField(
-            controller: controller,
-            maxLines: 3,
-            maxLength: 150,
-            decoration: const InputDecoration(
-              labelText: 'Bio',
-              hintText: 'Kendinizi kısaca tanıtın',
-            ),
-            validator: (value) {
-              if (value != null && value.length > 150) {
-                return 'Bio en fazla 150 karakter olabilir';
-              }
-              return null;
-            },
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('İptal'),
-          ),
-          TextButton(
-            onPressed: () {
-              if (formKey.currentState!.validate()) {
-                Navigator.pop(
-                    context, controller.text.isEmpty ? null : controller.text);
-              }
-            },
-            child: const Text('Kaydet'),
-          ),
-        ],
-      ),
-    );
-
-    if (newBio != profile.bio) {
-      try {
-        final socialService = ref.read(socialServiceProvider);
-        await socialService.updateProfile(bio: newBio);
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Bio güncellendi')),
-        );
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Hata: $e')),
-        );
-      }
-    }
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final credits = ref.watch(aiCreditsProvider);
@@ -246,7 +23,7 @@ class ProfileHeaderWidget extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.deepPurple,
+        color: Theme.of(context).primaryColor,
         borderRadius: const BorderRadius.only(
           bottomLeft: Radius.circular(30),
           bottomRight: Radius.circular(30),
@@ -275,25 +52,6 @@ class ProfileHeaderWidget extends ConsumerWidget {
                   style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.amber,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Text(
-                    'Kredi Al',
-                    style: TextStyle(
-                      color: Colors.black87,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                    ),
                   ),
                 ),
               ],
@@ -427,5 +185,218 @@ class ProfileHeaderWidget extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  Future<void> _handleImageUpload(BuildContext context, WidgetRef ref) async {
+    try {
+      final picker = ImagePicker();
+      final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+
+      if (image == null) return;
+
+      final storageService = ref.read(storageServiceProvider);
+      final socialService = ref.read(socialServiceProvider);
+
+      // Yükleme başladı bildirimi
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Fotoğraf yükleniyor...')),
+      );
+
+      // Fotoğrafı Storage'a yükle
+      final imageUrl = await storageService.uploadProfileImage(
+        profile.id,
+        File(image.path),
+      );
+
+      // Profili güncelle
+      await socialService.updateProfile(profileImage: imageUrl);
+
+      // Başarılı bildirimi
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Profil fotoğrafı güncellendi')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Hata: $e')),
+      );
+    }
+  }
+
+  Future<void> _handleDisplayNameEdit(
+      BuildContext context, WidgetRef ref) async {
+    final TextEditingController controller =
+        TextEditingController(text: profile.displayName);
+    final formKey = GlobalKey<FormState>();
+
+    final newDisplayName = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('İsmi Düzenle'),
+        content: Form(
+          key: formKey,
+          child: TextFormField(
+            controller: controller,
+            decoration: const InputDecoration(
+              labelText: 'İsim',
+              hintText: 'Yeni isminizi girin',
+            ),
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'İsim boş olamaz';
+              }
+              if (value.length < 2) {
+                return 'İsim en az 2 karakter olmalı';
+              }
+              return null;
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('İptal'),
+          ),
+          TextButton(
+            onPressed: () {
+              if (formKey.currentState!.validate()) {
+                Navigator.pop(context, controller.text);
+              }
+            },
+            child: const Text('Kaydet'),
+          ),
+        ],
+      ),
+    );
+
+    if (newDisplayName != null && newDisplayName != profile.displayName) {
+      try {
+        final socialService = ref.read(socialServiceProvider);
+        await socialService.updateProfile(displayName: newDisplayName);
+        ref.invalidate(currentUserProfileProvider);
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Hata: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _handleUsernameEdit(BuildContext context, WidgetRef ref) async {
+    final TextEditingController controller =
+        TextEditingController(text: profile.username);
+    final formKey = GlobalKey<FormState>();
+
+    final newUsername = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Kullanıcı Adını Düzenle'),
+        content: Form(
+          key: formKey,
+          child: TextFormField(
+            controller: controller,
+            decoration: const InputDecoration(
+              labelText: 'Kullanıcı Adı',
+              hintText: 'Yeni kullanıcı adını girin',
+            ),
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Kullanıcı adı boş olamaz';
+              }
+              if (value.length < 3) {
+                return 'Kullanıcı adı en az 3 karakter olmalı';
+              }
+              if (!RegExp(r'^[a-zA-Z0-9_]+$').hasMatch(value)) {
+                return 'Sadece harf, rakam ve alt çizgi kullanılabilir';
+              }
+              return null;
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('İptal'),
+          ),
+          TextButton(
+            onPressed: () {
+              if (formKey.currentState!.validate()) {
+                Navigator.pop(context, controller.text);
+              }
+            },
+            child: const Text('Kaydet'),
+          ),
+        ],
+      ),
+    );
+
+    if (newUsername != null && newUsername != profile.username) {
+      try {
+        final socialService = ref.read(socialServiceProvider);
+        await socialService.updateUsername(newUsername);
+        ref.invalidate(currentUserProfileProvider);
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Hata: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _handleBioEdit(BuildContext context, WidgetRef ref) async {
+    final TextEditingController controller =
+        TextEditingController(text: profile.bio);
+    final formKey = GlobalKey<FormState>();
+
+    final newBio = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Bio Düzenle'),
+        content: Form(
+          key: formKey,
+          child: TextFormField(
+            controller: controller,
+            maxLines: 3,
+            maxLength: 150,
+            decoration: const InputDecoration(
+              labelText: 'Bio',
+              hintText: 'Kendinizi kısaca tanıtın',
+            ),
+            validator: (value) {
+              if (value != null && value.length > 150) {
+                return 'Bio en fazla 150 karakter olabilir';
+              }
+              return null;
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('İptal'),
+          ),
+          TextButton(
+            onPressed: () {
+              if (formKey.currentState!.validate()) {
+                Navigator.pop(
+                    context, controller.text.isEmpty ? null : controller.text);
+              }
+            },
+            child: const Text('Kaydet'),
+          ),
+        ],
+      ),
+    );
+
+    if (newBio != profile.bio) {
+      try {
+        final socialService = ref.read(socialServiceProvider);
+        await socialService.updateProfile(bio: newBio);
+        ref.invalidate(currentUserProfileProvider);
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Hata: $e')),
+        );
+      }
+    }
   }
 }

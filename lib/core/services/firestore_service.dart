@@ -36,10 +36,12 @@ class FirestoreService {
   Future<UserProfile?> getUserProfile(String userId) async {
     try {
       final doc = await _firestore.collection('users').doc(userId).get();
-      if (doc.exists && doc.data() != null) {
-        return UserProfile.fromJson(doc.data()!);
-      }
-      return null;
+      if (!doc.exists) return null;
+
+      final data = doc.data();
+      if (data == null) return null;
+
+      return UserProfile.fromJson(data);
     } catch (e) {
       throw 'Kullanıcı profili alınırken hata oluştu: $e';
     }

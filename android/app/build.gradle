@@ -45,7 +45,7 @@ android {
     }
 
     kotlinOptions {
-        jvmTarget = '17'
+        jvmTarget = '1.8'
     }
 
     sourceSets {
@@ -62,17 +62,19 @@ android {
     }
 
     signingConfigs {
-        release {
-            keyAlias keystoreProperties['keyAlias']
-            keyPassword keystoreProperties['keyPassword']
-            storeFile rootProject.file(keystoreProperties['storeFile'])
-            storePassword keystoreProperties['storePassword']
+        if (keystorePropertiesFile.exists()) {
+            release {
+                keyAlias keystoreProperties['keyAlias']
+                keyPassword keystoreProperties['keyPassword']
+                storeFile rootProject.file(keystoreProperties['storeFile'])
+                storePassword keystoreProperties['storePassword']
+            }
         }
     }
 
     buildTypes {
         release {
-            signingConfig signingConfigs.release
+            signingConfig keystorePropertiesFile.exists() ? signingConfigs.release : null
             minifyEnabled true
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }
@@ -84,8 +86,9 @@ flutter {
 }
 
 dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
     implementation "com.google.android.gms:play-services-ads:22.5.0"
     implementation "com.google.android.gms:play-services-basement:18.2.0"
     implementation "androidx.multidex:multidex:2.0.1"
+    implementation platform('com.google.firebase:firebase-bom:32.7.0')
 }
