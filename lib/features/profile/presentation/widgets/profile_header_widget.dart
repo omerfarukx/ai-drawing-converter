@@ -65,10 +65,10 @@ class ProfileHeaderWidget extends ConsumerWidget {
               CircleAvatar(
                 radius: 50,
                 backgroundColor: Colors.white,
-                backgroundImage: profile.profileImage != null
-                    ? NetworkImage(profile.profileImage!)
+                backgroundImage: profile.photoUrl != null
+                    ? NetworkImage(profile.photoUrl!)
                     : null,
-                child: profile.profileImage == null
+                child: profile.photoUrl == null
                     ? const Icon(Icons.person,
                         size: 50, color: Colors.deepPurple)
                     : null,
@@ -209,7 +209,7 @@ class ProfileHeaderWidget extends ConsumerWidget {
       );
 
       // Profili güncelle
-      await socialService.updateProfile(profileImage: imageUrl);
+      await socialService.updateProfile(photoUrl: imageUrl);
 
       // Başarılı bildirimi
       ScaffoldMessenger.of(context).showSnackBar(

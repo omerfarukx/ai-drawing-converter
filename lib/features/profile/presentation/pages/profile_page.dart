@@ -21,26 +21,33 @@ import '../../../auth/domain/models/auth_state.dart';
 import '../../../auth/domain/models/user.dart';
 
 class ProfilePage extends ConsumerWidget {
-  const ProfilePage({super.key});
+  final String? userId;
+
+  const ProfilePage({super.key, this.userId});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final authState = ref.watch(authControllerProvider);
-    final profileAsync = ref.watch(currentUserProfileProvider);
+    final profileAsync = userId != null
+        ? ref.watch(userProfileProvider(userId!))
+        : ref.watch(currentUserProfileProvider);
+    final isCurrentUser = userId == null;
 
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.profileTitle),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () {
-              ref.read(authControllerProvider.notifier).signOut();
-            },
-            tooltip: l10n.logout,
-          ),
-        ],
+        actions: isCurrentUser
+            ? [
+                IconButton(
+                  icon: const Icon(Icons.logout),
+                  onPressed: () {
+                    ref.read(authControllerProvider.notifier).signOut();
+                  },
+                  tooltip: l10n.logout,
+                ),
+              ]
+            : null,
       ),
       body: profileAsync.when(
         loading: () => const Center(
@@ -63,7 +70,11 @@ class ProfilePage extends ConsumerWidget {
         ),
         data: (profile) => RefreshIndicator(
           onRefresh: () async {
-            ref.invalidate(currentUserProfileProvider);
+            if (userId != null) {
+              ref.invalidate(userProfileProvider(userId!));
+            } else {
+              ref.invalidate(currentUserProfileProvider);
+            }
           },
           child: ListView(
             padding: const EdgeInsets.all(16),
@@ -72,9 +83,11 @@ class ProfilePage extends ConsumerWidget {
               const SizedBox(height: 24),
               ProfileStatsWidget(profile: profile),
               const SizedBox(height: 24),
-              _buildActionButtons(context, l10n),
-              const SizedBox(height: 32),
-              const Divider(),
+              if (isCurrentUser) ...[
+                _buildActionButtons(context, l10n),
+                const SizedBox(height: 32),
+                const Divider(),
+              ],
               const SizedBox(height: 16),
               Text(
                 l10n.drawings,
@@ -82,8 +95,10 @@ class ProfilePage extends ConsumerWidget {
               ),
               const SizedBox(height: 16),
               ProfileDrawingsGrid(userId: profile.id),
-              const SizedBox(height: 32),
-              SpecialOffersWidget(),
+              if (isCurrentUser) ...[
+                const SizedBox(height: 32),
+                SpecialOffersWidget(),
+              ],
             ],
           ),
         ),

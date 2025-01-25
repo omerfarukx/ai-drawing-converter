@@ -9,7 +9,7 @@ class UserProfile with _$UserProfile {
     required String id,
     required String username,
     required String displayName,
-    String? profileImage,
+    String? photoUrl,
     String? bio,
     @Default(0) int followersCount,
     @Default(0) int followingCount,

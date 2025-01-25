@@ -7,6 +7,26 @@ final firestoreServiceProvider = Provider((ref) => FirestoreService());
 class FirestoreService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
+  // Kullanıcı ara
+  Future<List<UserProfile>> searchUsers(String query) async {
+    try {
+      if (query.isEmpty) return [];
+
+      final querySnapshot = await _firestore
+          .collection('users')
+          .where('username', isGreaterThanOrEqualTo: query)
+          .where('username', isLessThan: query + 'z')
+          .limit(10)
+          .get();
+
+      return querySnapshot.docs
+          .map((doc) => UserProfile.fromJson(doc.data()))
+          .toList();
+    } catch (e) {
+      throw 'Kullanıcılar aranırken hata oluştu: $e';
+    }
+  }
+
   // Kullanıcı adının kullanılıp kullanılmadığını kontrol et
   Future<bool> isUsernameTaken(String username) async {
     try {

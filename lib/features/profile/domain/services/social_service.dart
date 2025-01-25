@@ -22,6 +22,15 @@ class SocialService {
     return 'user_$randomString';
   }
 
+  // Kullanıcı arama
+  Future<List<UserProfile>> searchUsers(String query) async {
+    try {
+      return await _firestoreService.searchUsers(query);
+    } catch (e) {
+      throw 'Kullanıcılar aranamadı: $e';
+    }
+  }
+
   // Kullanıcı profili getirme
   Future<UserProfile> getUserProfile(String userId) async {
     try {
@@ -114,7 +123,7 @@ class SocialService {
     String? displayName,
     String? username,
     String? bio,
-    String? profileImage,
+    String? photoUrl,
   }) async {
     try {
       final currentUserId = _authService.currentUser?.uid;
@@ -126,7 +135,7 @@ class SocialService {
         username: username ?? currentProfile.username,
         displayName: displayName ?? currentProfile.displayName,
         bio: bio ?? currentProfile.bio,
-        profileImage: profileImage ?? currentProfile.profileImage,
+        photoUrl: photoUrl ?? currentProfile.photoUrl,
         followersCount: currentProfile.followersCount,
         followingCount: currentProfile.followingCount,
         drawingsCount: currentProfile.drawingsCount,

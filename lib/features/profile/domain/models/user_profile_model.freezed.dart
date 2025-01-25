@@ -23,7 +23,7 @@ mixin _$UserProfile {
   String get id => throw _privateConstructorUsedError;
   String get username => throw _privateConstructorUsedError;
   String get displayName => throw _privateConstructorUsedError;
-  String? get profileImage => throw _privateConstructorUsedError;
+  String? get photoUrl => throw _privateConstructorUsedError;
   String? get bio => throw _privateConstructorUsedError;
   int get followersCount => throw _privateConstructorUsedError;
   int get followingCount => throw _privateConstructorUsedError;
@@ -48,7 +48,7 @@ abstract class $UserProfileCopyWith<$Res> {
       {String id,
       String username,
       String displayName,
-      String? profileImage,
+      String? photoUrl,
       String? bio,
       int followersCount,
       int followingCount,
@@ -74,7 +74,7 @@ class _$UserProfileCopyWithImpl<$Res, $Val extends UserProfile>
     Object? id = null,
     Object? username = null,
     Object? displayName = null,
-    Object? profileImage = freezed,
+    Object? photoUrl = freezed,
     Object? bio = freezed,
     Object? followersCount = null,
     Object? followingCount = null,
@@ -96,9 +96,9 @@ class _$UserProfileCopyWithImpl<$Res, $Val extends UserProfile>
           ? _value.displayName
           : displayName // ignore: cast_nullable_to_non_nullable
               as String,
-      profileImage: freezed == profileImage
-          ? _value.profileImage
-          : profileImage // ignore: cast_nullable_to_non_nullable
+      photoUrl: freezed == photoUrl
+          ? _value.photoUrl
+          : photoUrl // ignore: cast_nullable_to_non_nullable
               as String?,
       bio: freezed == bio
           ? _value.bio
@@ -144,7 +144,7 @@ abstract class _$$UserProfileImplCopyWith<$Res>
       {String id,
       String username,
       String displayName,
-      String? profileImage,
+      String? photoUrl,
       String? bio,
       int followersCount,
       int followingCount,
@@ -168,7 +168,7 @@ class __$$UserProfileImplCopyWithImpl<$Res>
     Object? id = null,
     Object? username = null,
     Object? displayName = null,
-    Object? profileImage = freezed,
+    Object? photoUrl = freezed,
     Object? bio = freezed,
     Object? followersCount = null,
     Object? followingCount = null,
@@ -190,9 +190,9 @@ class __$$UserProfileImplCopyWithImpl<$Res>
           ? _value.displayName
           : displayName // ignore: cast_nullable_to_non_nullable
               as String,
-      profileImage: freezed == profileImage
-          ? _value.profileImage
-          : profileImage // ignore: cast_nullable_to_non_nullable
+      photoUrl: freezed == photoUrl
+          ? _value.photoUrl
+          : photoUrl // ignore: cast_nullable_to_non_nullable
               as String?,
       bio: freezed == bio
           ? _value.bio
@@ -233,7 +233,7 @@ class _$UserProfileImpl implements _UserProfile {
       {required this.id,
       required this.username,
       required this.displayName,
-      this.profileImage,
+      this.photoUrl,
       this.bio,
       this.followersCount = 0,
       this.followingCount = 0,
@@ -254,7 +254,7 @@ class _$UserProfileImpl implements _UserProfile {
   @override
   final String displayName;
   @override
-  final String? profileImage;
+  final String? photoUrl;
   @override
   final String? bio;
   @override
@@ -289,7 +289,7 @@ class _$UserProfileImpl implements _UserProfile {
 
   @override
   String toString() {
-    return 'UserProfile(id: $id, username: $username, displayName: $displayName, profileImage: $profileImage, bio: $bio, followersCount: $followersCount, followingCount: $followingCount, drawingsCount: $drawingsCount, isFollowing: $isFollowing, followers: $followers, following: $following)';
+    return 'UserProfile(id: $id, username: $username, displayName: $displayName, photoUrl: $photoUrl, bio: $bio, followersCount: $followersCount, followingCount: $followingCount, drawingsCount: $drawingsCount, isFollowing: $isFollowing, followers: $followers, following: $following)';
   }
 
   @override
@@ -302,8 +302,8 @@ class _$UserProfileImpl implements _UserProfile {
                 other.username == username) &&
             (identical(other.displayName, displayName) ||
                 other.displayName == displayName) &&
-            (identical(other.profileImage, profileImage) ||
-                other.profileImage == profileImage) &&
+            (identical(other.photoUrl, photoUrl) ||
+                other.photoUrl == photoUrl) &&
             (identical(other.bio, bio) || other.bio == bio) &&
             (identical(other.followersCount, followersCount) ||
                 other.followersCount == followersCount) &&
@@ -326,7 +326,7 @@ class _$UserProfileImpl implements _UserProfile {
       id,
       username,
       displayName,
-      profileImage,
+      photoUrl,
       bio,
       followersCount,
       followingCount,
@@ -354,7 +354,7 @@ abstract class _UserProfile implements UserProfile {
       {required final String id,
       required final String username,
       required final String displayName,
-      final String? profileImage,
+      final String? photoUrl,
       final String? bio,
       final int followersCount,
       final int followingCount,
@@ -373,7 +373,7 @@ abstract class _UserProfile implements UserProfile {
   @override
   String get displayName;
   @override
-  String? get profileImage;
+  String? get photoUrl;
   @override
   String? get bio;
   @override
