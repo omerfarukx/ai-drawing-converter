@@ -35,41 +35,23 @@ class SharedDrawingCard extends StatelessWidget {
           ),
         ),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
-              child: ClipRRect(
+            Container(
+              height: 200,
+              decoration: BoxDecoration(
                 borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(20),
                 ),
-                child: Image.network(
-                  drawing.imageUrl,
+                image: DecorationImage(
+                  image: NetworkImage(drawing.imageUrl),
                   fit: BoxFit.cover,
-                  width: double.infinity,
-                  loadingBuilder: (context, child, loadingProgress) {
-                    if (loadingProgress == null) return child;
-                    return Center(
-                      child: CircularProgressIndicator(
-                        value: loadingProgress.expectedTotalBytes != null
-                            ? loadingProgress.cumulativeBytesLoaded /
-                                loadingProgress.expectedTotalBytes!
-                            : null,
-                        color: const Color(0xFF533483),
-                      ),
-                    );
-                  },
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      color: Colors.grey[200],
-                      child: const Center(
-                        child: Icon(
-                          Icons.error_outline,
-                          color: Colors.grey,
-                          size: 32,
-                        ),
-                      ),
-                    );
-                  },
+                ),
+              ),
+              child: const Center(
+                child: CircularProgressIndicator(
+                  color: Color(0xFF533483),
                 ),
               ),
             ),
