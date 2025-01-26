@@ -31,7 +31,16 @@ final authControllerProvider =
 class AuthController extends StateNotifier<AuthState> {
   final AuthRepository _repository;
 
-  AuthController(this._repository) : super(const AuthState.initial());
+  AuthController(this._repository) : super(const AuthState.initial()) {
+    // Auth durumunu dinle
+    _repository.authStateChanges.listen((user) {
+      if (user != null) {
+        state = AuthState.authenticated(user);
+      } else {
+        state = const AuthState.unauthenticated();
+      }
+    });
+  }
 
   Future<void> signIn(String email, String password) async {
     try {

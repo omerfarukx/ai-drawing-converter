@@ -43,8 +43,26 @@ class FirestoreService {
   // Kullanıcı profili oluştur/güncelle
   Future<void> updateUserProfile(UserProfile profile) async {
     try {
+      final data = {
+        'id': profile.id,
+        'username': profile.username,
+        'displayName': profile.displayName,
+        'photoURL': profile.photoUrl,
+        'bio': profile.bio,
+        'followersCount': profile.followersCount,
+        'followingCount': profile.followingCount,
+        'drawingsCount': profile.drawingsCount,
+        'followers': profile.followers,
+        'following': profile.following,
+        'lastLoginAt': FieldValue.serverTimestamp(),
+      };
+
+      if (profile.createdAt == null) {
+        data['createdAt'] = FieldValue.serverTimestamp();
+      }
+
       await _firestore.collection('users').doc(profile.id).set(
-            profile.toJson(),
+            data,
             SetOptions(merge: true),
           );
     } catch (e) {
@@ -53,13 +71,33 @@ class FirestoreService {
   }
 
   // Kullanıcı profili getir
-  Future<UserProfile?> getUserProfile(String userId) async {
+  Future<UserProfile?> getUserProfile(String userId,
+      {String? currentUserId}) async {
     try {
       final doc = await _firestore.collection('users').doc(userId).get();
       if (!doc.exists) return null;
 
       final data = doc.data();
       if (data == null) return null;
+
+      // ID'yi ekle
+      data['id'] = doc.id;
+
+      // Varsayılan olarak isFollowing false olsun
+      data['isFollowing'] = false;
+
+      // Eğer mevcut kullanıcı ID'si verilmişse, takip durumunu kontrol et
+      if (currentUserId != null && currentUserId != userId) {
+        // Mevcut kullanıcının following listesini kontrol et
+        final currentUserDoc =
+            await _firestore.collection('users').doc(currentUserId).get();
+        final currentUserData = currentUserDoc.data();
+        if (currentUserData != null) {
+          final following =
+              List<String>.from(currentUserData['following'] ?? []);
+          data['isFollowing'] = following.contains(userId);
+        }
+      }
 
       return UserProfile.fromJson(data);
     } catch (e) {
@@ -70,6 +108,17 @@ class FirestoreService {
   // Kullanıcıyı takip et
   Future<void> followUser(String followerId, String followedId) async {
     try {
+      // Önce kullanıcının zaten takip edilip edilmediğini kontrol et
+      final followerDoc =
+          await _firestore.collection('users').doc(followerId).get();
+      final followerData = followerDoc.data();
+      if (followerData != null) {
+        final following = List<String>.from(followerData['following'] ?? []);
+        if (following.contains(followedId)) {
+          throw 'Bu kullanıcıyı zaten takip ediyorsunuz';
+        }
+      }
+
       final batch = _firestore.batch();
 
       // Takip eden kullanıcının following listesine ekle
@@ -95,6 +144,17 @@ class FirestoreService {
   // Kullanıcıyı takipten çıkar
   Future<void> unfollowUser(String followerId, String followedId) async {
     try {
+      // Önce kullanıcının gerçekten takip edilip edilmediğini kontrol et
+      final followerDoc =
+          await _firestore.collection('users').doc(followerId).get();
+      final followerData = followerDoc.data();
+      if (followerData != null) {
+        final following = List<String>.from(followerData['following'] ?? []);
+        if (!following.contains(followedId)) {
+          throw 'Bu kullanıcıyı zaten takip etmiyorsunuz';
+        }
+      }
+
       final batch = _firestore.batch();
 
       // Takip eden kullanıcının following listesinden çıkar

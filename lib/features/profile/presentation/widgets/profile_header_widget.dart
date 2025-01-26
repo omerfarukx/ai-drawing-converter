@@ -5,22 +5,37 @@ import 'package:image_picker/image_picker.dart';
 import '../../domain/models/user_profile_model.dart';
 import '../../domain/services/social_service.dart';
 import '../../../../core/services/storage_service.dart';
+import '../../../../core/services/firestore_service.dart';
 import '../../../drawing/presentation/providers/ai_credits_provider.dart';
 import '../providers/social_provider.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../auth/domain/models/auth_state.dart';
 
-class ProfileHeaderWidget extends ConsumerWidget {
+class ProfileHeaderWidget extends ConsumerStatefulWidget {
   final UserProfile profile;
+  final bool isCurrentUser;
 
   const ProfileHeaderWidget({
     super.key,
     required this.profile,
+    this.isCurrentUser = false,
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ProfileHeaderWidget> createState() =>
+      _ProfileHeaderWidgetState();
+}
+
+class _ProfileHeaderWidgetState extends ConsumerState<ProfileHeaderWidget> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
     final credits = ref.watch(aiCreditsProvider);
+    final authState = ref.watch(authControllerProvider);
 
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Theme.of(context).primaryColor,
@@ -30,33 +45,36 @@ class ProfileHeaderWidget extends ConsumerWidget {
         ),
       ),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           // Kredi Bilgisi
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(
-                  Icons.stars_rounded,
-                  color: Colors.amber,
-                  size: 20,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  '$credits Kredi',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
+          if (widget.isCurrentUser)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.stars_rounded,
+                    color: Colors.amber,
+                    size: 20,
                   ),
-                ),
-              ],
+                  const SizedBox(width: 8),
+                  Text(
+                    '$credits Kredi',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
           const SizedBox(height: 24),
 
           // Avatar
@@ -65,57 +83,62 @@ class ProfileHeaderWidget extends ConsumerWidget {
               CircleAvatar(
                 radius: 50,
                 backgroundColor: Colors.white,
-                backgroundImage: profile.photoUrl != null
-                    ? NetworkImage(profile.photoUrl!)
+                backgroundImage: widget.profile.photoUrl != null
+                    ? NetworkImage(widget.profile.photoUrl!)
                     : null,
-                child: profile.photoUrl == null
+                child: widget.profile.photoUrl == null
                     ? const Icon(Icons.person,
                         size: 50, color: Colors.deepPurple)
                     : null,
               ),
-              Positioned(
-                right: 0,
-                bottom: 0,
-                child: GestureDetector(
-                  onTap: () => _handleImageUpload(context, ref),
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.add_a_photo,
-                      color: Colors.deepPurple,
-                      size: 20,
+              if (widget.isCurrentUser)
+                Positioned(
+                  right: 0,
+                  bottom: 0,
+                  child: GestureDetector(
+                    onTap: () => _handleImageUpload(context, ref),
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.add_a_photo,
+                        color: Colors.deepPurple,
+                        size: 20,
+                      ),
                     ),
                   ),
                 ),
-              ),
             ],
           ),
           const SizedBox(height: 16),
 
           // İsim
           GestureDetector(
-            onTap: () => _handleDisplayNameEdit(context, ref),
+            onTap: widget.isCurrentUser
+                ? () => _handleDisplayNameEdit(context, ref)
+                : null,
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  profile.displayName,
+                  widget.profile.displayName,
                   style: const TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
                 ),
-                const SizedBox(width: 4),
-                Icon(
-                  Icons.edit,
-                  size: 16,
-                  color: Colors.white.withOpacity(0.8),
-                ),
+                if (widget.isCurrentUser) ...[
+                  const SizedBox(width: 4),
+                  Icon(
+                    Icons.edit,
+                    size: 16,
+                    color: Colors.white.withOpacity(0.8),
+                  ),
+                ],
               ],
             ),
           ),
@@ -123,68 +146,167 @@ class ProfileHeaderWidget extends ConsumerWidget {
 
           // Kullanıcı adı
           GestureDetector(
-            onTap: () => _handleUsernameEdit(context, ref),
+            onTap: widget.isCurrentUser
+                ? () => _handleUsernameEdit(context, ref)
+                : null,
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  '@${profile.username}',
+                  '@${widget.profile.username}',
                   style: TextStyle(
                     fontSize: 16,
                     color: Colors.white.withOpacity(0.8),
                   ),
                 ),
-                const SizedBox(width: 4),
-                Icon(
-                  Icons.edit,
-                  size: 16,
-                  color: Colors.white.withOpacity(0.8),
-                ),
+                if (widget.isCurrentUser) ...[
+                  const SizedBox(width: 4),
+                  Icon(
+                    Icons.edit,
+                    size: 16,
+                    color: Colors.white.withOpacity(0.8),
+                  ),
+                ],
               ],
             ),
           ),
+          const SizedBox(height: 12),
 
           // Bio
           GestureDetector(
-            onTap: () => _handleBioEdit(context, ref),
+            onTap: widget.isCurrentUser
+                ? () => _handleBioEdit(context, ref)
+                : null,
             child: Container(
-              margin: const EdgeInsets.only(top: 12),
+              width: double.infinity,
+              margin: const EdgeInsets.symmetric(horizontal: 32),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
                 color: Colors.white.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Flexible(
                     child: Text(
-                      profile.bio ?? 'Bio ekle',
+                      widget.profile.bio ?? 'Bio ekle',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 14,
-                        color: profile.bio != null
+                        color: widget.profile.bio != null
                             ? Colors.white.withOpacity(0.9)
                             : Colors.white.withOpacity(0.5),
-                        fontStyle: profile.bio != null
+                        fontStyle: widget.profile.bio != null
                             ? FontStyle.normal
                             : FontStyle.italic,
                       ),
                     ),
                   ),
-                  const SizedBox(width: 4),
-                  Icon(
-                    Icons.edit,
-                    size: 14,
-                    color: Colors.white.withOpacity(0.8),
-                  ),
+                  if (widget.isCurrentUser) ...[
+                    const SizedBox(width: 4),
+                    Icon(
+                      Icons.edit,
+                      size: 14,
+                      color: Colors.white.withOpacity(0.8),
+                    ),
+                  ],
                 ],
               ),
             ),
           ),
+
+          // Takip Et / Takibi Bırak Butonu
+          if (!widget.isCurrentUser) ...[
+            const SizedBox(height: 16),
+            authState.map(
+              initial: (_) => const SizedBox(),
+              loading: (_) => const Center(child: CircularProgressIndicator()),
+              authenticated: (state) => SizedBox(
+                width: 200,
+                child: MouseRegion(
+                  onEnter: (_) => setState(() => _isHovered = true),
+                  onExit: (_) => setState(() => _isHovered = false),
+                  child: ElevatedButton(
+                    onPressed: () =>
+                        _handleFollowAction(context, ref, state.user.id),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: widget.profile.isFollowing
+                          ? _isHovered
+                              ? Colors.red.withOpacity(0.1)
+                              : Colors.white.withOpacity(0.1)
+                          : Colors.white,
+                      foregroundColor: widget.profile.isFollowing
+                          ? _isHovered
+                              ? Colors.red
+                              : Colors.white
+                          : Colors.deepPurple,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 12,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                    ),
+                    child: Text(
+                      widget.profile.isFollowing
+                          ? _isHovered
+                              ? 'Takibi Bırak'
+                              : 'Takip Ediliyor'
+                          : 'Takip Et',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              unauthenticated: (_) => const SizedBox(),
+              error: (state) => Text('Hata: ${state.message}'),
+            ),
+          ],
         ],
       ),
     );
+  }
+
+  Future<void> _handleFollowAction(
+    BuildContext context,
+    WidgetRef ref,
+    String currentUserId,
+  ) async {
+    try {
+      final socialService = ref.read(socialServiceProvider);
+
+      if (widget.profile.isFollowing) {
+        await socialService.unfollowUser(widget.profile.id);
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Takipten çıkıldı')),
+        );
+      } else {
+        await socialService.followUser(widget.profile.id);
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Takip edildi')),
+        );
+      }
+
+      // Profilleri yenile
+      ref.invalidate(userProfileProvider(widget.profile.id));
+      ref.invalidate(currentUserProfileProvider);
+
+      // Takipçi ve takip edilen listelerini yenile
+      ref.invalidate(followersProvider(widget.profile.id));
+      ref.invalidate(followingProvider(currentUserId));
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Hata: $e')),
+      );
+    }
   }
 
   Future<void> _handleImageUpload(BuildContext context, WidgetRef ref) async {
@@ -204,7 +326,7 @@ class ProfileHeaderWidget extends ConsumerWidget {
 
       // Fotoğrafı Storage'a yükle
       final imageUrl = await storageService.uploadProfileImage(
-        profile.id,
+        widget.profile.id,
         File(image.path),
       );
 
@@ -225,7 +347,7 @@ class ProfileHeaderWidget extends ConsumerWidget {
   Future<void> _handleDisplayNameEdit(
       BuildContext context, WidgetRef ref) async {
     final TextEditingController controller =
-        TextEditingController(text: profile.displayName);
+        TextEditingController(text: widget.profile.displayName);
     final formKey = GlobalKey<FormState>();
 
     final newDisplayName = await showDialog<String>(
@@ -268,7 +390,8 @@ class ProfileHeaderWidget extends ConsumerWidget {
       ),
     );
 
-    if (newDisplayName != null && newDisplayName != profile.displayName) {
+    if (newDisplayName != null &&
+        newDisplayName != widget.profile.displayName) {
       try {
         final socialService = ref.read(socialServiceProvider);
         await socialService.updateProfile(displayName: newDisplayName);
@@ -283,7 +406,7 @@ class ProfileHeaderWidget extends ConsumerWidget {
 
   Future<void> _handleUsernameEdit(BuildContext context, WidgetRef ref) async {
     final TextEditingController controller =
-        TextEditingController(text: profile.username);
+        TextEditingController(text: widget.profile.username);
     final formKey = GlobalKey<FormState>();
 
     final newUsername = await showDialog<String>(
@@ -329,7 +452,7 @@ class ProfileHeaderWidget extends ConsumerWidget {
       ),
     );
 
-    if (newUsername != null && newUsername != profile.username) {
+    if (newUsername != null && newUsername != widget.profile.username) {
       try {
         final socialService = ref.read(socialServiceProvider);
         await socialService.updateUsername(newUsername);
@@ -344,7 +467,7 @@ class ProfileHeaderWidget extends ConsumerWidget {
 
   Future<void> _handleBioEdit(BuildContext context, WidgetRef ref) async {
     final TextEditingController controller =
-        TextEditingController(text: profile.bio);
+        TextEditingController(text: widget.profile.bio);
     final formKey = GlobalKey<FormState>();
 
     final newBio = await showDialog<String>(
@@ -387,7 +510,7 @@ class ProfileHeaderWidget extends ConsumerWidget {
       ),
     );
 
-    if (newBio != profile.bio) {
+    if (newBio != widget.profile.bio) {
       try {
         final socialService = ref.read(socialServiceProvider);
         await socialService.updateProfile(bio: newBio);

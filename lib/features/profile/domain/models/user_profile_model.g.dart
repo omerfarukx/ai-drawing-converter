@@ -11,7 +11,7 @@ _$UserProfileImpl _$$UserProfileImplFromJson(Map<String, dynamic> json) =>
       id: json['id'] as String,
       username: json['username'] as String,
       displayName: json['displayName'] as String,
-      photoUrl: json['photoUrl'] as String?,
+      photoUrl: json['photoURL'] as String?,
       bio: json['bio'] as String?,
       followersCount: (json['followersCount'] as num?)?.toInt() ?? 0,
       followingCount: (json['followingCount'] as num?)?.toInt() ?? 0,
@@ -25,6 +25,8 @@ _$UserProfileImpl _$$UserProfileImplFromJson(Map<String, dynamic> json) =>
               ?.map((e) => e as String)
               .toList() ??
           const [],
+      createdAt: _dateTimeFromTimestamp(json['createdAt']),
+      lastLoginAt: _dateTimeFromTimestamp(json['lastLoginAt']),
     );
 
 Map<String, dynamic> _$$UserProfileImplToJson(_$UserProfileImpl instance) =>
@@ -32,7 +34,7 @@ Map<String, dynamic> _$$UserProfileImplToJson(_$UserProfileImpl instance) =>
       'id': instance.id,
       'username': instance.username,
       'displayName': instance.displayName,
-      'photoUrl': instance.photoUrl,
+      'photoURL': instance.photoUrl,
       'bio': instance.bio,
       'followersCount': instance.followersCount,
       'followingCount': instance.followingCount,
@@ -40,4 +42,6 @@ Map<String, dynamic> _$$UserProfileImplToJson(_$UserProfileImpl instance) =>
       'isFollowing': instance.isFollowing,
       'followers': instance.followers,
       'following': instance.following,
+      'createdAt': _dateTimeToTimestamp(instance.createdAt),
+      'lastLoginAt': _dateTimeToTimestamp(instance.lastLoginAt),
     };

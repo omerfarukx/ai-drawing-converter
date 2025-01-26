@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/models/user_profile_model.dart';
+import '../pages/followers_page.dart';
+import '../pages/following_page.dart';
 
 class ProfileStatsWidget extends StatelessWidget {
   final UserProfile profile;
@@ -33,6 +36,7 @@ class ProfileStatsWidget extends StatelessWidget {
             'Çizimler',
             profile.drawingsCount,
             Icons.brush_outlined,
+            onTap: null,
           ),
           _buildDivider(),
           _buildStatItem(
@@ -40,6 +44,14 @@ class ProfileStatsWidget extends StatelessWidget {
             'Takipçi',
             profile.followersCount,
             Icons.people_outline,
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => FollowersPage(userId: profile.id),
+                ),
+              );
+            },
           ),
           _buildDivider(),
           _buildStatItem(
@@ -47,6 +59,14 @@ class ProfileStatsWidget extends StatelessWidget {
             'Takip',
             profile.followingCount,
             Icons.person_add_outlined,
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => FollowingPage(userId: profile.id),
+                ),
+              );
+            },
           ),
         ],
       ),
@@ -57,33 +77,41 @@ class ProfileStatsWidget extends StatelessWidget {
     BuildContext context,
     String label,
     int count,
-    IconData icon,
-  ) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(
-          icon,
-          color: Colors.deepPurple,
-          size: 24,
+    IconData icon, {
+    VoidCallback? onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              color: Colors.deepPurple,
+              size: 24,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              count.toString(),
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.deepPurple,
+              ),
+            ),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey[600],
+              ),
+            ),
+          ],
         ),
-        const SizedBox(height: 8),
-        Text(
-          count.toString(),
-          style: const TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: Colors.deepPurple,
-          ),
-        ),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            color: Colors.grey[600],
-          ),
-        ),
-      ],
+      ),
     );
   }
 

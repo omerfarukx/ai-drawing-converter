@@ -19,6 +19,68 @@ import '../../../settings/presentation/pages/settings_page.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/domain/models/auth_state.dart';
 import '../../../auth/domain/models/user.dart';
+import '../../../auth/presentation/pages/login_page.dart';
+
+class LoadingPage extends StatelessWidget {
+  const LoadingPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      body: Center(
+        child: CircularProgressIndicator(),
+      ),
+    );
+  }
+}
+
+class ErrorPage extends StatelessWidget {
+  final String error;
+
+  const ErrorPage({super.key, required this.error});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.error_outline,
+                color: Colors.red,
+                size: 48,
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Bir hata oluştu',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Hata: $error',
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.red),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: const Text('Geri Dön'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
 
 class ProfilePage extends ConsumerWidget {
   final String? userId;
@@ -29,80 +91,102 @@ class ProfilePage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final authState = ref.watch(authControllerProvider);
-    final profileAsync = userId != null
-        ? ref.watch(userProfileProvider(userId!))
-        : ref.watch(currentUserProfileProvider);
-    final isCurrentUser = userId == null;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.profileTitle),
-        actions: isCurrentUser
-            ? [
-                IconButton(
-                  icon: const Icon(Icons.logout),
-                  onPressed: () {
-                    ref.read(authControllerProvider.notifier).signOut();
-                  },
-                  tooltip: l10n.logout,
-                ),
-              ]
-            : null,
-      ),
-      body: profileAsync.when(
-        loading: () => const Center(
-          child: CircularProgressIndicator(),
-        ),
-        error: (error, stackTrace) => Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text('Hata: $error'),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: () {
+    return authState.map(
+      initial: (_) => const LoadingPage(),
+      loading: (_) => const LoadingPage(),
+      authenticated: (authState) {
+        final profileAsync = userId != null
+            ? ref.watch(userProfileProvider(userId!))
+            : ref.watch(currentUserProfileProvider);
+        final isCurrentUser = userId == null || userId == authState.user.id;
+
+        return Scaffold(
+          appBar: AppBar(
+            title: Text(l10n.profileTitle),
+            actions: isCurrentUser
+                ? [
+                    IconButton(
+                      icon: const Icon(Icons.logout),
+                      onPressed: () {
+                        ref.read(authControllerProvider.notifier).signOut();
+                      },
+                      tooltip: l10n.logout,
+                    ),
+                  ]
+                : null,
+          ),
+          body: profileAsync.when(
+            loading: () => const Center(
+              child: CircularProgressIndicator(),
+            ),
+            error: (error, stackTrace) => Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text('Hata: $error'),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () {
+                      if (userId != null) {
+                        ref.invalidate(userProfileProvider(userId!));
+                      } else {
+                        ref.invalidate(currentUserProfileProvider);
+                      }
+                    },
+                    child: const Text('Tekrar Dene'),
+                  ),
+                ],
+              ),
+            ),
+            data: (profile) => RefreshIndicator(
+              onRefresh: () async {
+                if (userId != null) {
+                  ref.invalidate(userProfileProvider(userId!));
+                  // Takipçi ve takip edilen listelerini de yenile
+                  ref.invalidate(followersProvider(userId!));
+                  ref.invalidate(followingProvider(userId!));
+                } else {
                   ref.invalidate(currentUserProfileProvider);
-                },
-                child: const Text('Tekrar Dene'),
+                  // Takipçi ve takip edilen listelerini de yenile
+                  ref.invalidate(followersProvider(profile.id));
+                  ref.invalidate(followingProvider(profile.id));
+                }
+              },
+              child: ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  ProfileHeaderWidget(
+                    profile: profile,
+                    isCurrentUser: isCurrentUser,
+                  ),
+                  const SizedBox(height: 24),
+                  ProfileStatsWidget(profile: profile),
+                  const SizedBox(height: 24),
+                  if (isCurrentUser) ...[
+                    _buildActionButtons(context, l10n),
+                    const SizedBox(height: 32),
+                    const Divider(),
+                  ],
+                  const SizedBox(height: 16),
+                  Text(
+                    l10n.drawings,
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                  const SizedBox(height: 16),
+                  ProfileDrawingsGrid(userId: profile.id),
+                  if (isCurrentUser) ...[
+                    const SizedBox(height: 32),
+                    SpecialOffersWidget(),
+                  ],
+                ],
               ),
-            ],
+            ),
           ),
-        ),
-        data: (profile) => RefreshIndicator(
-          onRefresh: () async {
-            if (userId != null) {
-              ref.invalidate(userProfileProvider(userId!));
-            } else {
-              ref.invalidate(currentUserProfileProvider);
-            }
-          },
-          child: ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              ProfileHeaderWidget(profile: profile),
-              const SizedBox(height: 24),
-              ProfileStatsWidget(profile: profile),
-              const SizedBox(height: 24),
-              if (isCurrentUser) ...[
-                _buildActionButtons(context, l10n),
-                const SizedBox(height: 32),
-                const Divider(),
-              ],
-              const SizedBox(height: 16),
-              Text(
-                l10n.drawings,
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              const SizedBox(height: 16),
-              ProfileDrawingsGrid(userId: profile.id),
-              if (isCurrentUser) ...[
-                const SizedBox(height: 32),
-                SpecialOffersWidget(),
-              ],
-            ],
-          ),
-        ),
-      ),
+        );
+      },
+      unauthenticated: (_) => const LoginPage(),
+      error: (state) => ErrorPage(error: state.message),
     );
   }
 

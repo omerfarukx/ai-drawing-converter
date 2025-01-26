@@ -23,6 +23,7 @@ mixin _$UserProfile {
   String get id => throw _privateConstructorUsedError;
   String get username => throw _privateConstructorUsedError;
   String get displayName => throw _privateConstructorUsedError;
+  @JsonKey(name: 'photoURL')
   String? get photoUrl => throw _privateConstructorUsedError;
   String? get bio => throw _privateConstructorUsedError;
   int get followersCount => throw _privateConstructorUsedError;
@@ -31,6 +32,10 @@ mixin _$UserProfile {
   bool get isFollowing => throw _privateConstructorUsedError;
   List<String> get followers => throw _privateConstructorUsedError;
   List<String> get following => throw _privateConstructorUsedError;
+  @JsonKey(fromJson: _dateTimeFromTimestamp, toJson: _dateTimeToTimestamp)
+  DateTime? get createdAt => throw _privateConstructorUsedError;
+  @JsonKey(fromJson: _dateTimeFromTimestamp, toJson: _dateTimeToTimestamp)
+  DateTime? get lastLoginAt => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
@@ -48,14 +53,18 @@ abstract class $UserProfileCopyWith<$Res> {
       {String id,
       String username,
       String displayName,
-      String? photoUrl,
+      @JsonKey(name: 'photoURL') String? photoUrl,
       String? bio,
       int followersCount,
       int followingCount,
       int drawingsCount,
       bool isFollowing,
       List<String> followers,
-      List<String> following});
+      List<String> following,
+      @JsonKey(fromJson: _dateTimeFromTimestamp, toJson: _dateTimeToTimestamp)
+      DateTime? createdAt,
+      @JsonKey(fromJson: _dateTimeFromTimestamp, toJson: _dateTimeToTimestamp)
+      DateTime? lastLoginAt});
 }
 
 /// @nodoc
@@ -82,6 +91,8 @@ class _$UserProfileCopyWithImpl<$Res, $Val extends UserProfile>
     Object? isFollowing = null,
     Object? followers = null,
     Object? following = null,
+    Object? createdAt = freezed,
+    Object? lastLoginAt = freezed,
   }) {
     return _then(_value.copyWith(
       id: null == id
@@ -128,6 +139,14 @@ class _$UserProfileCopyWithImpl<$Res, $Val extends UserProfile>
           ? _value.following
           : following // ignore: cast_nullable_to_non_nullable
               as List<String>,
+      createdAt: freezed == createdAt
+          ? _value.createdAt
+          : createdAt // ignore: cast_nullable_to_non_nullable
+              as DateTime?,
+      lastLoginAt: freezed == lastLoginAt
+          ? _value.lastLoginAt
+          : lastLoginAt // ignore: cast_nullable_to_non_nullable
+              as DateTime?,
     ) as $Val);
   }
 }
@@ -144,14 +163,18 @@ abstract class _$$UserProfileImplCopyWith<$Res>
       {String id,
       String username,
       String displayName,
-      String? photoUrl,
+      @JsonKey(name: 'photoURL') String? photoUrl,
       String? bio,
       int followersCount,
       int followingCount,
       int drawingsCount,
       bool isFollowing,
       List<String> followers,
-      List<String> following});
+      List<String> following,
+      @JsonKey(fromJson: _dateTimeFromTimestamp, toJson: _dateTimeToTimestamp)
+      DateTime? createdAt,
+      @JsonKey(fromJson: _dateTimeFromTimestamp, toJson: _dateTimeToTimestamp)
+      DateTime? lastLoginAt});
 }
 
 /// @nodoc
@@ -176,6 +199,8 @@ class __$$UserProfileImplCopyWithImpl<$Res>
     Object? isFollowing = null,
     Object? followers = null,
     Object? following = null,
+    Object? createdAt = freezed,
+    Object? lastLoginAt = freezed,
   }) {
     return _then(_$UserProfileImpl(
       id: null == id
@@ -222,6 +247,14 @@ class __$$UserProfileImplCopyWithImpl<$Res>
           ? _value._following
           : following // ignore: cast_nullable_to_non_nullable
               as List<String>,
+      createdAt: freezed == createdAt
+          ? _value.createdAt
+          : createdAt // ignore: cast_nullable_to_non_nullable
+              as DateTime?,
+      lastLoginAt: freezed == lastLoginAt
+          ? _value.lastLoginAt
+          : lastLoginAt // ignore: cast_nullable_to_non_nullable
+              as DateTime?,
     ));
   }
 }
@@ -233,14 +266,18 @@ class _$UserProfileImpl implements _UserProfile {
       {required this.id,
       required this.username,
       required this.displayName,
-      this.photoUrl,
+      @JsonKey(name: 'photoURL') this.photoUrl,
       this.bio,
       this.followersCount = 0,
       this.followingCount = 0,
       this.drawingsCount = 0,
       this.isFollowing = false,
       final List<String> followers = const [],
-      final List<String> following = const []})
+      final List<String> following = const [],
+      @JsonKey(fromJson: _dateTimeFromTimestamp, toJson: _dateTimeToTimestamp)
+      this.createdAt,
+      @JsonKey(fromJson: _dateTimeFromTimestamp, toJson: _dateTimeToTimestamp)
+      this.lastLoginAt})
       : _followers = followers,
         _following = following;
 
@@ -254,6 +291,7 @@ class _$UserProfileImpl implements _UserProfile {
   @override
   final String displayName;
   @override
+  @JsonKey(name: 'photoURL')
   final String? photoUrl;
   @override
   final String? bio;
@@ -288,8 +326,15 @@ class _$UserProfileImpl implements _UserProfile {
   }
 
   @override
+  @JsonKey(fromJson: _dateTimeFromTimestamp, toJson: _dateTimeToTimestamp)
+  final DateTime? createdAt;
+  @override
+  @JsonKey(fromJson: _dateTimeFromTimestamp, toJson: _dateTimeToTimestamp)
+  final DateTime? lastLoginAt;
+
+  @override
   String toString() {
-    return 'UserProfile(id: $id, username: $username, displayName: $displayName, photoUrl: $photoUrl, bio: $bio, followersCount: $followersCount, followingCount: $followingCount, drawingsCount: $drawingsCount, isFollowing: $isFollowing, followers: $followers, following: $following)';
+    return 'UserProfile(id: $id, username: $username, displayName: $displayName, photoUrl: $photoUrl, bio: $bio, followersCount: $followersCount, followingCount: $followingCount, drawingsCount: $drawingsCount, isFollowing: $isFollowing, followers: $followers, following: $following, createdAt: $createdAt, lastLoginAt: $lastLoginAt)';
   }
 
   @override
@@ -316,7 +361,11 @@ class _$UserProfileImpl implements _UserProfile {
             const DeepCollectionEquality()
                 .equals(other._followers, _followers) &&
             const DeepCollectionEquality()
-                .equals(other._following, _following));
+                .equals(other._following, _following) &&
+            (identical(other.createdAt, createdAt) ||
+                other.createdAt == createdAt) &&
+            (identical(other.lastLoginAt, lastLoginAt) ||
+                other.lastLoginAt == lastLoginAt));
   }
 
   @JsonKey(ignore: true)
@@ -333,7 +382,9 @@ class _$UserProfileImpl implements _UserProfile {
       drawingsCount,
       isFollowing,
       const DeepCollectionEquality().hash(_followers),
-      const DeepCollectionEquality().hash(_following));
+      const DeepCollectionEquality().hash(_following),
+      createdAt,
+      lastLoginAt);
 
   @JsonKey(ignore: true)
   @override
@@ -354,14 +405,18 @@ abstract class _UserProfile implements UserProfile {
       {required final String id,
       required final String username,
       required final String displayName,
-      final String? photoUrl,
+      @JsonKey(name: 'photoURL') final String? photoUrl,
       final String? bio,
       final int followersCount,
       final int followingCount,
       final int drawingsCount,
       final bool isFollowing,
       final List<String> followers,
-      final List<String> following}) = _$UserProfileImpl;
+      final List<String> following,
+      @JsonKey(fromJson: _dateTimeFromTimestamp, toJson: _dateTimeToTimestamp)
+      final DateTime? createdAt,
+      @JsonKey(fromJson: _dateTimeFromTimestamp, toJson: _dateTimeToTimestamp)
+      final DateTime? lastLoginAt}) = _$UserProfileImpl;
 
   factory _UserProfile.fromJson(Map<String, dynamic> json) =
       _$UserProfileImpl.fromJson;
@@ -373,6 +428,7 @@ abstract class _UserProfile implements UserProfile {
   @override
   String get displayName;
   @override
+  @JsonKey(name: 'photoURL')
   String? get photoUrl;
   @override
   String? get bio;
@@ -388,6 +444,12 @@ abstract class _UserProfile implements UserProfile {
   List<String> get followers;
   @override
   List<String> get following;
+  @override
+  @JsonKey(fromJson: _dateTimeFromTimestamp, toJson: _dateTimeToTimestamp)
+  DateTime? get createdAt;
+  @override
+  @JsonKey(fromJson: _dateTimeFromTimestamp, toJson: _dateTimeToTimestamp)
+  DateTime? get lastLoginAt;
   @override
   @JsonKey(ignore: true)
   _$$UserProfileImplCopyWith<_$UserProfileImpl> get copyWith =>

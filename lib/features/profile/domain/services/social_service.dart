@@ -34,11 +34,15 @@ class SocialService {
   // Kullanıcı profili getirme
   Future<UserProfile> getUserProfile(String userId) async {
     try {
+      final currentUserId = _authService.currentUser?.uid;
       if (userId == 'current_user') {
-        userId = _authService.currentUser?.uid ?? '';
+        userId = currentUserId ?? '';
       }
 
-      final profile = await _firestoreService.getUserProfile(userId);
+      final profile = await _firestoreService.getUserProfile(
+        userId,
+        currentUserId: currentUserId,
+      );
       if (profile != null) {
         return profile;
       }
@@ -83,6 +87,10 @@ class SocialService {
       if (currentUserId == userId) throw 'Kendinizi takip edemezsiniz';
 
       await _firestoreService.followUser(currentUserId, userId);
+
+      // Profilleri güncelle
+      await getUserProfile(currentUserId);
+      await getUserProfile(userId);
     } catch (e) {
       throw 'Takip işlemi başarısız: $e';
     }
@@ -95,6 +103,10 @@ class SocialService {
       if (currentUserId == null) throw 'Oturum açmanız gerekiyor';
 
       await _firestoreService.unfollowUser(currentUserId, userId);
+
+      // Profilleri güncelle
+      await getUserProfile(currentUserId);
+      await getUserProfile(userId);
     } catch (e) {
       throw 'Takipten çıkarma işlemi başarısız: $e';
     }
