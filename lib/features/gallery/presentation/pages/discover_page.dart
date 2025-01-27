@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../providers/discover_provider.dart';
 import '../widgets/shared_drawing_card.dart';
 import '../../../profile/presentation/providers/user_search_provider.dart';
@@ -17,11 +18,27 @@ class DiscoverPage extends ConsumerStatefulWidget {
 class _DiscoverPageState extends ConsumerState<DiscoverPage> {
   final TextEditingController _searchController = TextEditingController();
   bool _isSearching = false;
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
 
   @override
   void dispose() {
     _searchController.dispose();
+    _scrollController.dispose();
     super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent * 0.8) {
+      // Sayfa sonuna yaklaşıldığında daha fazla içerik yükle
+      ref.read(discoverProvider.notifier).loadMore();
+    }
   }
 
   @override
@@ -219,16 +236,23 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
                     );
                   }
 
-                  return ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: drawings.length,
-                    itemBuilder: (context, index) {
-                      final drawing = drawings[index];
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 16),
-                        child: SharedDrawingCard(drawing: drawing),
-                      );
+                  return RefreshIndicator(
+                    color: const Color(0xFF533483),
+                    onRefresh: () async {
+                      await ref.read(discoverProvider.notifier).refresh();
                     },
+                    child: ListView.builder(
+                      controller: _scrollController,
+                      padding: const EdgeInsets.all(16),
+                      itemCount: drawings.length,
+                      itemBuilder: (context, index) {
+                        final drawing = drawings[index];
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 16),
+                          child: SharedDrawingCard(drawing: drawing),
+                        );
+                      },
+                    ),
                   );
                 },
                 loading: () => const Center(

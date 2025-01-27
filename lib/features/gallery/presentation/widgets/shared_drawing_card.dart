@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../domain/models/shared_drawing.dart';
 import '../pages/shared_drawing_detail_page.dart';
 
@@ -38,20 +39,46 @@ class SharedDrawingCard extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              height: 200,
-              decoration: BoxDecoration(
+            Hero(
+              tag: 'drawing_${drawing.id}',
+              child: ClipRRect(
                 borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(20),
                 ),
-                image: DecorationImage(
-                  image: NetworkImage(drawing.imageUrl),
+                child: CachedNetworkImage(
+                  imageUrl: drawing.imageUrl,
+                  height: 200,
+                  width: double.infinity,
                   fit: BoxFit.cover,
-                ),
-              ),
-              child: const Center(
-                child: CircularProgressIndicator(
-                  color: Color(0xFF533483),
+                  fadeInDuration: const Duration(milliseconds: 300),
+                  fadeOutDuration: const Duration(milliseconds: 300),
+                  memCacheWidth: 640,
+                  memCacheHeight: 360,
+                  placeholder: (context, url) => Container(
+                    height: 200,
+                    color: const Color(0xFF1A1A2E),
+                    child: const Center(
+                      child: SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Color(0xFF533483),
+                        ),
+                      ),
+                    ),
+                  ),
+                  errorWidget: (context, url, error) => Container(
+                    height: 200,
+                    color: const Color(0xFF1A1A2E),
+                    child: const Center(
+                      child: Icon(
+                        Icons.error_outline,
+                        color: Colors.white,
+                        size: 32,
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -62,18 +89,26 @@ class SharedDrawingCard extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      CircleAvatar(
-                        radius: 16,
-                        backgroundImage: drawing.userProfileImage.isNotEmpty
-                            ? NetworkImage(drawing.userProfileImage)
-                            : null,
-                        child: drawing.userProfileImage.isEmpty
-                            ? const Icon(
-                                Icons.person,
-                                color: Colors.white,
-                                size: 20,
-                              )
-                            : null,
+                      Hero(
+                        tag: 'profile_${drawing.userId}',
+                        child: CircleAvatar(
+                          radius: 16,
+                          backgroundColor: const Color(0xFF1A1A2E),
+                          backgroundImage: drawing.userProfileImage.isNotEmpty
+                              ? CachedNetworkImageProvider(
+                                  drawing.userProfileImage,
+                                  maxWidth: 64,
+                                  maxHeight: 64,
+                                )
+                              : null,
+                          child: drawing.userProfileImage.isEmpty
+                              ? const Icon(
+                                  Icons.person,
+                                  color: Colors.white,
+                                  size: 20,
+                                )
+                              : null,
+                        ),
                       ),
                       const SizedBox(width: 8),
                       Expanded(

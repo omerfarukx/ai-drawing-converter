@@ -76,10 +76,10 @@ class SharedDrawingRepository {
   }
 
   // Paylaşılan çizimleri getir
-  Stream<List<SharedDrawing>> getSharedDrawings({
+  Future<List<SharedDrawing>> getSharedDrawings({
     int limit = 20,
-    String? lastDocumentId,
-  }) {
+    String? startAfterId,
+  }) async {
     try {
       var query = _firestore
           .collection(_collection)
@@ -87,15 +87,18 @@ class SharedDrawingRepository {
           .orderBy('createdAt', descending: true)
           .limit(limit);
 
-      if (lastDocumentId != null) {
-        query = query.startAfter([lastDocumentId]);
+      if (startAfterId != null) {
+        final startAfterDoc =
+            await _firestore.collection(_collection).doc(startAfterId).get();
+        if (startAfterDoc.exists) {
+          query = query.startAfterDocument(startAfterDoc);
+        }
       }
 
-      return query.snapshots().map((snapshot) {
-        return snapshot.docs
-            .map((doc) => SharedDrawing.fromFirestore(doc))
-            .toList();
-      });
+      final snapshot = await query.get();
+      return snapshot.docs
+          .map((doc) => SharedDrawing.fromFirestore(doc))
+          .toList();
     } catch (e) {
       throw 'Paylaşılan çizimler getirilirken hata oluştu: $e';
     }
