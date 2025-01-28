@@ -1,0 +1,55 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
+
+part 'shared_drawing.freezed.dart';
+part 'shared_drawing.g.dart';
+
+@freezed
+class SharedDrawing with _$SharedDrawing {
+  const factory SharedDrawing({
+    required String id,
+    required String userId,
+    required String userName,
+    required String userProfileImage,
+    required String imageUrl,
+    required String title,
+    String? description,
+    @Default(0) int likes,
+    @Default(0) int comments,
+    @Default(0) int saves,
+    @Default(false) bool isLiked,
+    @Default(false) bool isSaved,
+    @Default(false) bool isPublic,
+    required DateTime createdAt,
+    DateTime? updatedAt,
+  }) = _SharedDrawing;
+
+  factory SharedDrawing.fromJson(Map<String, dynamic> json) =>
+      _$SharedDrawingFromJson(json);
+
+  static SharedDrawing fromFirestore(DocumentSnapshot doc, {String? currentUserId}) {
+    final data = doc.data() as Map<String, dynamic>;
+    final createdAtTimestamp = data['createdAt'] as Timestamp;
+    final updatedAtTimestamp = data['updatedAt'] as Timestamp?;
+    final likedBy = List<String>.from(data['likedBy'] ?? []);
+    final savedBy = List<String>.from(data['savedBy'] ?? []);
+
+    return SharedDrawing(
+      id: doc.id,
+      userId: data['userId'] as String,
+      userName: data['userName'] as String,
+      userProfileImage: data['userProfileImage'] as String,
+      imageUrl: data['imageUrl'] as String,
+      title: data['title'] as String,
+      description: data['description'] as String?,
+      likes: likedBy.length,
+      saves: savedBy.length,
+      comments: (data['comments'] as num?)?.toInt() ?? 0,
+      isLiked: currentUserId != null && likedBy.contains(currentUserId),
+      isSaved: currentUserId != null && savedBy.contains(currentUserId),
+      isPublic: data['isPublic'] as bool? ?? false,
+      createdAt: createdAtTimestamp.toDate(),
+      updatedAt: updatedAtTimestamp?.toDate(),
+    );
+  }
+} 

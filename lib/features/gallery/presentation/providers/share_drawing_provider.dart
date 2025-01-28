@@ -24,6 +24,10 @@ class ShareDrawingNotifier extends StateNotifier<AsyncValue<void>> {
     state = const AsyncValue.loading();
 
     try {
+      if (!imageUrl.startsWith('http')) {
+        throw 'Geçersiz resim URL\'i';
+      }
+
       await _repository.shareDrawing(
         userId: userId,
         userName: userName,
@@ -35,6 +39,7 @@ class ShareDrawingNotifier extends StateNotifier<AsyncValue<void>> {
       );
       state = const AsyncValue.data(null);
     } catch (error, stackTrace) {
+      print('Debug: Paylaşma hatası - $error');
       state = AsyncValue.error(error, stackTrace);
     }
   }

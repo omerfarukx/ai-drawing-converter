@@ -31,7 +31,7 @@ class AuthRepositoryImpl implements AuthRepository {
         id: data['id'] as String? ?? '',
         email: data['email'] as String? ?? '',
         username: data['username'] as String? ?? '',
-        displayName: data['displayName'] as String?,
+        displayName: data['displayName'] as String? ?? 'Yeni Kullanıcı',
         photoURL: data['photoURL'] as String?,
         bio: data['bio'] as String?,
         followers: List<String>.from(data['followers'] ?? []),
@@ -40,10 +40,10 @@ class AuthRepositoryImpl implements AuthRepository {
         isVerified: data['isVerified'] as bool? ?? false,
         createdAt: data['createdAt'] != null
             ? (data['createdAt'] as Timestamp).toDate()
-            : null,
+            : DateTime.now(),
         lastLoginAt: data['lastLoginAt'] != null
             ? (data['lastLoginAt'] as Timestamp).toDate()
-            : null,
+            : DateTime.now(),
       );
     } catch (e) {
       print('getCurrentUser error: $e');
@@ -254,7 +254,7 @@ class AuthRepositoryImpl implements AuthRepository {
           id: data['id'] as String? ?? firebaseUser.uid,
           email: data['email'] as String? ?? firebaseUser.email ?? '',
           username: data['username'] as String? ?? '',
-          displayName: data['displayName'] as String?,
+          displayName: data['displayName'] as String? ?? 'Yeni Kullanıcı',
           photoURL: data['photoURL'] as String?,
           bio: data['bio'] as String?,
           followers: List<String>.from(data['followers'] ?? []),

@@ -10,7 +10,7 @@ _$UserImpl _$$UserImplFromJson(Map<String, dynamic> json) => _$UserImpl(
       id: json['id'] as String,
       email: json['email'] as String,
       username: json['username'] as String,
-      displayName: json['displayName'] as String?,
+      displayName: json['displayName'] as String,
       photoURL: json['photoURL'] as String?,
       bio: json['bio'] as String?,
       followers: (json['followers'] as List<dynamic>?)
@@ -23,12 +23,8 @@ _$UserImpl _$$UserImplFromJson(Map<String, dynamic> json) => _$UserImpl(
           const [],
       drawingsCount: (json['drawingsCount'] as num?)?.toInt() ?? 0,
       isVerified: json['isVerified'] as bool? ?? false,
-      createdAt: json['createdAt'] == null
-          ? null
-          : DateTime.parse(json['createdAt'] as String),
-      lastLoginAt: json['lastLoginAt'] == null
-          ? null
-          : DateTime.parse(json['lastLoginAt'] as String),
+      createdAt: DateTime.parse(json['createdAt'] as String),
+      lastLoginAt: DateTime.parse(json['lastLoginAt'] as String),
     );
 
 Map<String, dynamic> _$$UserImplToJson(_$UserImpl instance) =>
@@ -43,6 +39,6 @@ Map<String, dynamic> _$$UserImplToJson(_$UserImpl instance) =>
       'following': instance.following,
       'drawingsCount': instance.drawingsCount,
       'isVerified': instance.isVerified,
-      'createdAt': instance.createdAt?.toIso8601String(),
-      'lastLoginAt': instance.lastLoginAt?.toIso8601String(),
+      'createdAt': instance.createdAt.toIso8601String(),
+      'lastLoginAt': instance.lastLoginAt.toIso8601String(),
     };

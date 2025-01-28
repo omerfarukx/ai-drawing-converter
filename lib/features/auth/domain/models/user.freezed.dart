@@ -23,15 +23,15 @@ mixin _$User {
   String get id => throw _privateConstructorUsedError;
   String get email => throw _privateConstructorUsedError;
   String get username => throw _privateConstructorUsedError;
-  String? get displayName => throw _privateConstructorUsedError;
+  String get displayName => throw _privateConstructorUsedError;
   String? get photoURL => throw _privateConstructorUsedError;
   String? get bio => throw _privateConstructorUsedError;
   List<String> get followers => throw _privateConstructorUsedError;
   List<String> get following => throw _privateConstructorUsedError;
   int get drawingsCount => throw _privateConstructorUsedError;
   bool get isVerified => throw _privateConstructorUsedError;
-  DateTime? get createdAt => throw _privateConstructorUsedError;
-  DateTime? get lastLoginAt => throw _privateConstructorUsedError;
+  DateTime get createdAt => throw _privateConstructorUsedError;
+  DateTime get lastLoginAt => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
@@ -47,15 +47,15 @@ abstract class $UserCopyWith<$Res> {
       {String id,
       String email,
       String username,
-      String? displayName,
+      String displayName,
       String? photoURL,
       String? bio,
       List<String> followers,
       List<String> following,
       int drawingsCount,
       bool isVerified,
-      DateTime? createdAt,
-      DateTime? lastLoginAt});
+      DateTime createdAt,
+      DateTime lastLoginAt});
 }
 
 /// @nodoc
@@ -74,15 +74,15 @@ class _$UserCopyWithImpl<$Res, $Val extends User>
     Object? id = null,
     Object? email = null,
     Object? username = null,
-    Object? displayName = freezed,
+    Object? displayName = null,
     Object? photoURL = freezed,
     Object? bio = freezed,
     Object? followers = null,
     Object? following = null,
     Object? drawingsCount = null,
     Object? isVerified = null,
-    Object? createdAt = freezed,
-    Object? lastLoginAt = freezed,
+    Object? createdAt = null,
+    Object? lastLoginAt = null,
   }) {
     return _then(_value.copyWith(
       id: null == id
@@ -97,10 +97,10 @@ class _$UserCopyWithImpl<$Res, $Val extends User>
           ? _value.username
           : username // ignore: cast_nullable_to_non_nullable
               as String,
-      displayName: freezed == displayName
+      displayName: null == displayName
           ? _value.displayName
           : displayName // ignore: cast_nullable_to_non_nullable
-              as String?,
+              as String,
       photoURL: freezed == photoURL
           ? _value.photoURL
           : photoURL // ignore: cast_nullable_to_non_nullable
@@ -125,14 +125,14 @@ class _$UserCopyWithImpl<$Res, $Val extends User>
           ? _value.isVerified
           : isVerified // ignore: cast_nullable_to_non_nullable
               as bool,
-      createdAt: freezed == createdAt
+      createdAt: null == createdAt
           ? _value.createdAt
           : createdAt // ignore: cast_nullable_to_non_nullable
-              as DateTime?,
-      lastLoginAt: freezed == lastLoginAt
+              as DateTime,
+      lastLoginAt: null == lastLoginAt
           ? _value.lastLoginAt
           : lastLoginAt // ignore: cast_nullable_to_non_nullable
-              as DateTime?,
+              as DateTime,
     ) as $Val);
   }
 }
@@ -148,15 +148,15 @@ abstract class _$$UserImplCopyWith<$Res> implements $UserCopyWith<$Res> {
       {String id,
       String email,
       String username,
-      String? displayName,
+      String displayName,
       String? photoURL,
       String? bio,
       List<String> followers,
       List<String> following,
       int drawingsCount,
       bool isVerified,
-      DateTime? createdAt,
-      DateTime? lastLoginAt});
+      DateTime createdAt,
+      DateTime lastLoginAt});
 }
 
 /// @nodoc
@@ -172,15 +172,15 @@ class __$$UserImplCopyWithImpl<$Res>
     Object? id = null,
     Object? email = null,
     Object? username = null,
-    Object? displayName = freezed,
+    Object? displayName = null,
     Object? photoURL = freezed,
     Object? bio = freezed,
     Object? followers = null,
     Object? following = null,
     Object? drawingsCount = null,
     Object? isVerified = null,
-    Object? createdAt = freezed,
-    Object? lastLoginAt = freezed,
+    Object? createdAt = null,
+    Object? lastLoginAt = null,
   }) {
     return _then(_$UserImpl(
       id: null == id
@@ -195,10 +195,10 @@ class __$$UserImplCopyWithImpl<$Res>
           ? _value.username
           : username // ignore: cast_nullable_to_non_nullable
               as String,
-      displayName: freezed == displayName
+      displayName: null == displayName
           ? _value.displayName
           : displayName // ignore: cast_nullable_to_non_nullable
-              as String?,
+              as String,
       photoURL: freezed == photoURL
           ? _value.photoURL
           : photoURL // ignore: cast_nullable_to_non_nullable
@@ -223,36 +223,37 @@ class __$$UserImplCopyWithImpl<$Res>
           ? _value.isVerified
           : isVerified // ignore: cast_nullable_to_non_nullable
               as bool,
-      createdAt: freezed == createdAt
+      createdAt: null == createdAt
           ? _value.createdAt
           : createdAt // ignore: cast_nullable_to_non_nullable
-              as DateTime?,
-      lastLoginAt: freezed == lastLoginAt
+              as DateTime,
+      lastLoginAt: null == lastLoginAt
           ? _value.lastLoginAt
           : lastLoginAt // ignore: cast_nullable_to_non_nullable
-              as DateTime?,
+              as DateTime,
     ));
   }
 }
 
 /// @nodoc
 @JsonSerializable()
-class _$UserImpl with DiagnosticableTreeMixin implements _User {
+class _$UserImpl extends _User {
   const _$UserImpl(
       {required this.id,
       required this.email,
       required this.username,
-      this.displayName,
+      required this.displayName,
       this.photoURL,
       this.bio,
       final List<String> followers = const [],
       final List<String> following = const [],
       this.drawingsCount = 0,
       this.isVerified = false,
-      this.createdAt,
-      this.lastLoginAt})
+      required this.createdAt,
+      required this.lastLoginAt})
       : _followers = followers,
-        _following = following;
+        _following = following,
+        super._();
 
   factory _$UserImpl.fromJson(Map<String, dynamic> json) =>
       _$$UserImplFromJson(json);
@@ -264,7 +265,7 @@ class _$UserImpl with DiagnosticableTreeMixin implements _User {
   @override
   final String username;
   @override
-  final String? displayName;
+  final String displayName;
   @override
   final String? photoURL;
   @override
@@ -294,32 +295,13 @@ class _$UserImpl with DiagnosticableTreeMixin implements _User {
   @JsonKey()
   final bool isVerified;
   @override
-  final DateTime? createdAt;
+  final DateTime createdAt;
   @override
-  final DateTime? lastLoginAt;
+  final DateTime lastLoginAt;
 
   @override
-  String toString({DiagnosticLevel minLevel = DiagnosticLevel.info}) {
+  String toString() {
     return 'User(id: $id, email: $email, username: $username, displayName: $displayName, photoURL: $photoURL, bio: $bio, followers: $followers, following: $following, drawingsCount: $drawingsCount, isVerified: $isVerified, createdAt: $createdAt, lastLoginAt: $lastLoginAt)';
-  }
-
-  @override
-  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    super.debugFillProperties(properties);
-    properties
-      ..add(DiagnosticsProperty('type', 'User'))
-      ..add(DiagnosticsProperty('id', id))
-      ..add(DiagnosticsProperty('email', email))
-      ..add(DiagnosticsProperty('username', username))
-      ..add(DiagnosticsProperty('displayName', displayName))
-      ..add(DiagnosticsProperty('photoURL', photoURL))
-      ..add(DiagnosticsProperty('bio', bio))
-      ..add(DiagnosticsProperty('followers', followers))
-      ..add(DiagnosticsProperty('following', following))
-      ..add(DiagnosticsProperty('drawingsCount', drawingsCount))
-      ..add(DiagnosticsProperty('isVerified', isVerified))
-      ..add(DiagnosticsProperty('createdAt', createdAt))
-      ..add(DiagnosticsProperty('lastLoginAt', lastLoginAt));
   }
 
   @override
@@ -381,20 +363,21 @@ class _$UserImpl with DiagnosticableTreeMixin implements _User {
   }
 }
 
-abstract class _User implements User {
+abstract class _User extends User {
   const factory _User(
       {required final String id,
       required final String email,
       required final String username,
-      final String? displayName,
+      required final String displayName,
       final String? photoURL,
       final String? bio,
       final List<String> followers,
       final List<String> following,
       final int drawingsCount,
       final bool isVerified,
-      final DateTime? createdAt,
-      final DateTime? lastLoginAt}) = _$UserImpl;
+      required final DateTime createdAt,
+      required final DateTime lastLoginAt}) = _$UserImpl;
+  const _User._() : super._();
 
   factory _User.fromJson(Map<String, dynamic> json) = _$UserImpl.fromJson;
 
@@ -405,7 +388,7 @@ abstract class _User implements User {
   @override
   String get username;
   @override
-  String? get displayName;
+  String get displayName;
   @override
   String? get photoURL;
   @override
@@ -419,9 +402,9 @@ abstract class _User implements User {
   @override
   bool get isVerified;
   @override
-  DateTime? get createdAt;
+  DateTime get createdAt;
   @override
-  DateTime? get lastLoginAt;
+  DateTime get lastLoginAt;
   @override
   @JsonKey(ignore: true)
   _$$UserImplCopyWith<_$UserImpl> get copyWith =>

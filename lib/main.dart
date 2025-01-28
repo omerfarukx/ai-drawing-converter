@@ -6,6 +6,8 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
 import 'firebase_options.dart';
 import 'core/theme/app_theme.dart';
+import 'features/auth/presentation/providers/user_profile_provider.dart';
+import 'features/auth/presentation/providers/auth_provider.dart';
 import 'core/providers/locale_provider.dart';
 import 'core/services/ad_service.dart';
 import 'features/drawing/presentation/pages/drawing_page.dart';
@@ -14,7 +16,6 @@ import 'features/gallery/presentation/pages/discover_page.dart';
 import 'features/settings/presentation/pages/settings_page.dart';
 import 'features/profile/presentation/pages/profile_page.dart';
 import 'features/auth/presentation/pages/login_page.dart';
-import 'features/auth/presentation/providers/auth_provider.dart';
 import 'features/auth/domain/models/auth_state.dart';
 import 'core/services/user_service.dart';
 
@@ -106,6 +107,9 @@ class MyApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Kullanıcı profili provider'ını dinle
+    ref.watch(userProfileProvider);
+
     final locale = ref.watch(localeProvider);
     final authState = ref.watch(authStateProvider);
 
@@ -126,6 +130,10 @@ class MyApp extends ConsumerWidget {
         Locale('en'),
         Locale('tr'),
       ],
+      routes: {
+        '/drawing': (context) => const DrawingPage(),
+        '/profile': (context) => const ProfilePage(),
+      },
       home: authState.when(
         data: (state) => switch (state) {
           AuthAuthenticated(:final user) => const MainPage(),

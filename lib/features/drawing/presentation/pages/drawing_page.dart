@@ -2,15 +2,24 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../providers/drawing_provider.dart';
+import '../../domain/models/drawing_state.dart';
 import '../widgets/drawing_canvas.dart';
 import '../widgets/drawing_toolbar.dart';
 import '../widgets/ai_button.dart';
+import '../../../gallery/presentation/providers/gallery_provider.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../profile/domain/models/user_profile.dart';
 
-class DrawingPage extends ConsumerWidget {
+class DrawingPage extends ConsumerStatefulWidget {
   const DrawingPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<DrawingPage> createState() => _DrawingPageState();
+}
+
+class _DrawingPageState extends ConsumerState<DrawingPage> {
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final drawingState = ref.watch(drawingProvider);
 
@@ -27,7 +36,6 @@ class DrawingPage extends ConsumerWidget {
             elevation: 0,
             pinned: true,
             actions: [
-              // Temizle butonu
               Container(
                 margin: const EdgeInsets.only(right: 8),
                 decoration: BoxDecoration(
@@ -38,6 +46,79 @@ class DrawingPage extends ConsumerWidget {
                   icon: const Icon(Icons.refresh),
                   onPressed: () {
                     ref.read(drawingProvider.notifier).clear();
+                  },
+                ),
+              ),
+              Container(
+                margin: const EdgeInsets.only(right: 8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF16213E),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: IconButton(
+                  icon: const Icon(Icons.share),
+                  onPressed: () async {
+                    final authState = ref.read(authControllerProvider);
+
+                    authState.maybeMap(
+                      authenticated: (state) async {
+                        try {
+                          final shareDrawing = ref.read(
+                            shareDrawingProvider(state.user.profile),
+                          );
+
+                          if (drawingState.lines.isEmpty) {
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Önce bir çizim yapmalısınız!'),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
+                            return;
+                          }
+
+                          // Çizimi kaydet
+                          final imageUrl = await drawingState.saveToImage();
+
+                          // Çizimi paylaş
+                          await shareDrawing(
+                            imageUrl: imageUrl,
+                            title:
+                                "Yeni Çizim ${DateTime.now().day}/${DateTime.now().month}",
+                            description: "Yapay zeka ile oluşturulmuş çizim",
+                          );
+
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Çizim başarıyla paylaşıldı!'),
+                                backgroundColor: Colors.green,
+                              ),
+                            );
+                          }
+                        } catch (e) {
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Hata: ${e.toString()}'),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          }
+                        }
+                      },
+                      orElse: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                                'Çizim paylaşmak için giriş yapmalısınız.'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      },
+                    );
                   },
                 ),
               ),

@@ -54,21 +54,35 @@ class _ShareDrawingDialogState extends ConsumerState<ShareDrawingDialog> {
       final userService = UserService();
       final user = await userService.getCurrentUser();
 
+      print('Debug: Kullanıcı bilgileri alındı - ${user?.uid}');
+
       if (user == null) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Lütfen önce giriş yapın')),
           );
         }
+        setState(() => _isLoading = false);
         return;
       }
 
+      // Dosya yolunu kontrol et
+      final file = File(widget.drawing.path);
+      if (!await file.exists()) {
+        throw 'Çizim dosyası bulunamadı';
+      }
+
+      print('Debug: Storage\'a resim yükleniyor... Dosya: ${file.path}');
       // Resmi Firebase Storage'a yükle
       final imageUrl = await storageService.uploadDrawing(
         user.uid,
-        File(widget.drawing.path),
+        file,
       );
+      print('Debug: Resim yüklendi - $imageUrl');
 
+      if (!mounted) return;
+
+      print('Debug: Firestore\'a kayıt başlıyor...');
       // Çizimi paylaş
       await ref.read(shareDrawingProvider.notifier).shareDrawing(
             userId: user.uid,
@@ -79,19 +93,23 @@ class _ShareDrawingDialogState extends ConsumerState<ShareDrawingDialog> {
             description: _descriptionController.text.trim(),
             isPublic: _isPublic,
           );
+      print('Debug: Firestore\'a kayıt tamamlandı');
 
-      if (mounted) {
-        Navigator.of(context).pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Çizim başarıyla paylaşıldı')),
-        );
-      }
+      if (!mounted) return;
+
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Çizim başarıyla paylaşıldı')),
+      );
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Hata: $e')),
-        );
-      }
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Hata: ${e.toString().replaceAll('Exception: ', '')}'),
+          backgroundColor: Colors.red,
+        ),
+      );
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);

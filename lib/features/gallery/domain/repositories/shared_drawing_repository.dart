@@ -50,28 +50,48 @@ class SharedDrawingRepository {
     bool isPublic = true,
   }) async {
     try {
-      // Koleksiyonu başlat
-      await initializeCollection();
-
+      final now = DateTime.now();
       final data = {
         'userId': userId,
         'userName': userName,
+        'displayName': userName,
         'userProfileImage': userProfileImage,
         'imageUrl': imageUrl,
         'title': title,
         'description': description,
         'likes': 0,
         'comments': 0,
+        'saves': 0,
         'isPublic': isPublic,
-        'createdAt': FieldValue.serverTimestamp(),
+        'createdAt': now,
+        'updatedAt': now,
       };
 
+      // Dökümanı oluştur
       final docRef = await _firestore.collection(_collection).add(data);
-      final doc = await docRef.get();
 
-      return SharedDrawing.fromFirestore(doc);
+      // SharedDrawing nesnesini oluştur ve dön
+      return SharedDrawing(
+        id: docRef.id,
+        userId: userId,
+        userName: userName,
+        displayName: userName,
+        userPhotoURL: userProfileImage,
+        imageUrl: imageUrl,
+        title: title,
+        description: description,
+        likesCount: 0,
+        savesCount: 0,
+        commentsCount: 0,
+        isLiked: false,
+        isSaved: false,
+        createdAt: now,
+        updatedAt: now,
+      );
     } catch (e) {
-      throw 'Çizim paylaşılırken hata oluştu: $e';
+      print('Çizim paylaşma hatası: $e');
+      throw Exception(
+          'Çizim paylaşılırken bir hata oluştu. Lütfen tekrar deneyin.');
     }
   }
 
@@ -81,6 +101,7 @@ class SharedDrawingRepository {
     String? startAfterId,
   }) async {
     try {
+      print('Debug: getSharedDrawings - Sorgu oluşturuluyor...');
       var query = _firestore
           .collection(_collection)
           .where('isPublic', isEqualTo: true)
@@ -88,6 +109,7 @@ class SharedDrawingRepository {
           .limit(limit);
 
       if (startAfterId != null) {
+        print('Debug: getSharedDrawings - Pagination yapılıyor...');
         final startAfterDoc =
             await _firestore.collection(_collection).doc(startAfterId).get();
         if (startAfterDoc.exists) {
@@ -95,11 +117,19 @@ class SharedDrawingRepository {
         }
       }
 
+      print('Debug: getSharedDrawings - Sorgu çalıştırılıyor...');
       final snapshot = await query.get();
-      return snapshot.docs
-          .map((doc) => SharedDrawing.fromFirestore(doc))
+      print('Debug: getSharedDrawings - ${snapshot.docs.length} çizim bulundu');
+
+      final drawings = snapshot.docs
+          .map((doc) => SharedDrawing.fromFirestore(doc.data()!, doc.id))
           .toList();
+
+      print(
+          'Debug: getSharedDrawings - Çizimler: ${drawings.map((d) => d.title).join(', ')}');
+      return drawings;
     } catch (e) {
+      print('Debug: getSharedDrawings - Hata: $e');
       throw 'Paylaşılan çizimler getirilirken hata oluştu: $e';
     }
   }
@@ -114,7 +144,7 @@ class SharedDrawingRepository {
           .snapshots()
           .map((snapshot) {
         return snapshot.docs
-            .map((doc) => SharedDrawing.fromFirestore(doc))
+            .map((doc) => SharedDrawing.fromFirestore(doc.data()!, doc.id))
             .toList();
       });
     } catch (e) {

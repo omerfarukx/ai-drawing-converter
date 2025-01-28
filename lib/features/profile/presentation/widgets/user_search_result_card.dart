@@ -43,16 +43,19 @@ class UserSearchResultCard extends StatelessWidget {
                       ),
                     ],
                   ),
-                  child: CircleAvatar(
-                    radius: 28,
-                    backgroundColor: const Color(0xFF533483).withOpacity(0.2),
-                    backgroundImage: user.photoUrl != null
-                        ? NetworkImage(user.photoUrl!)
-                        : null,
-                    child: user.photoUrl == null
-                        ? const Icon(Icons.person,
-                            color: Colors.white70, size: 32)
-                        : null,
+                  child: Hero(
+                    tag: 'user_search_profile_${user.id}',
+                    child: CircleAvatar(
+                      radius: 28,
+                      backgroundColor: const Color(0xFF533483).withOpacity(0.2),
+                      backgroundImage: user.photoUrl != null
+                          ? NetworkImage(user.photoUrl!)
+                          : null,
+                      child: user.photoUrl == null
+                          ? const Icon(Icons.person,
+                              color: Colors.white70, size: 32)
+                          : null,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 16),

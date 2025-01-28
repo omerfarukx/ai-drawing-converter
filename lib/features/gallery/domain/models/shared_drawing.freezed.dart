@@ -23,15 +23,18 @@ mixin _$SharedDrawing {
   String get id => throw _privateConstructorUsedError;
   String get userId => throw _privateConstructorUsedError;
   String get userName => throw _privateConstructorUsedError;
-  String get userProfileImage => throw _privateConstructorUsedError;
+  String get displayName => throw _privateConstructorUsedError;
+  String? get userPhotoURL => throw _privateConstructorUsedError;
   String get imageUrl => throw _privateConstructorUsedError;
   String get title => throw _privateConstructorUsedError;
   String? get description => throw _privateConstructorUsedError;
-  int get likes => throw _privateConstructorUsedError;
-  int get comments => throw _privateConstructorUsedError;
-  bool get isPublic => throw _privateConstructorUsedError;
+  int get likesCount => throw _privateConstructorUsedError;
+  int get savesCount => throw _privateConstructorUsedError;
+  int get commentsCount => throw _privateConstructorUsedError;
+  bool get isLiked => throw _privateConstructorUsedError;
+  bool get isSaved => throw _privateConstructorUsedError;
   DateTime get createdAt => throw _privateConstructorUsedError;
-  DateTime? get updatedAt => throw _privateConstructorUsedError;
+  DateTime get updatedAt => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
@@ -49,15 +52,18 @@ abstract class $SharedDrawingCopyWith<$Res> {
       {String id,
       String userId,
       String userName,
-      String userProfileImage,
+      String displayName,
+      String? userPhotoURL,
       String imageUrl,
       String title,
       String? description,
-      int likes,
-      int comments,
-      bool isPublic,
+      int likesCount,
+      int savesCount,
+      int commentsCount,
+      bool isLiked,
+      bool isSaved,
       DateTime createdAt,
-      DateTime? updatedAt});
+      DateTime updatedAt});
 }
 
 /// @nodoc
@@ -76,15 +82,18 @@ class _$SharedDrawingCopyWithImpl<$Res, $Val extends SharedDrawing>
     Object? id = null,
     Object? userId = null,
     Object? userName = null,
-    Object? userProfileImage = null,
+    Object? displayName = null,
+    Object? userPhotoURL = freezed,
     Object? imageUrl = null,
     Object? title = null,
     Object? description = freezed,
-    Object? likes = null,
-    Object? comments = null,
-    Object? isPublic = null,
+    Object? likesCount = null,
+    Object? savesCount = null,
+    Object? commentsCount = null,
+    Object? isLiked = null,
+    Object? isSaved = null,
     Object? createdAt = null,
-    Object? updatedAt = freezed,
+    Object? updatedAt = null,
   }) {
     return _then(_value.copyWith(
       id: null == id
@@ -99,10 +108,14 @@ class _$SharedDrawingCopyWithImpl<$Res, $Val extends SharedDrawing>
           ? _value.userName
           : userName // ignore: cast_nullable_to_non_nullable
               as String,
-      userProfileImage: null == userProfileImage
-          ? _value.userProfileImage
-          : userProfileImage // ignore: cast_nullable_to_non_nullable
+      displayName: null == displayName
+          ? _value.displayName
+          : displayName // ignore: cast_nullable_to_non_nullable
               as String,
+      userPhotoURL: freezed == userPhotoURL
+          ? _value.userPhotoURL
+          : userPhotoURL // ignore: cast_nullable_to_non_nullable
+              as String?,
       imageUrl: null == imageUrl
           ? _value.imageUrl
           : imageUrl // ignore: cast_nullable_to_non_nullable
@@ -115,26 +128,34 @@ class _$SharedDrawingCopyWithImpl<$Res, $Val extends SharedDrawing>
           ? _value.description
           : description // ignore: cast_nullable_to_non_nullable
               as String?,
-      likes: null == likes
-          ? _value.likes
-          : likes // ignore: cast_nullable_to_non_nullable
+      likesCount: null == likesCount
+          ? _value.likesCount
+          : likesCount // ignore: cast_nullable_to_non_nullable
               as int,
-      comments: null == comments
-          ? _value.comments
-          : comments // ignore: cast_nullable_to_non_nullable
+      savesCount: null == savesCount
+          ? _value.savesCount
+          : savesCount // ignore: cast_nullable_to_non_nullable
               as int,
-      isPublic: null == isPublic
-          ? _value.isPublic
-          : isPublic // ignore: cast_nullable_to_non_nullable
+      commentsCount: null == commentsCount
+          ? _value.commentsCount
+          : commentsCount // ignore: cast_nullable_to_non_nullable
+              as int,
+      isLiked: null == isLiked
+          ? _value.isLiked
+          : isLiked // ignore: cast_nullable_to_non_nullable
+              as bool,
+      isSaved: null == isSaved
+          ? _value.isSaved
+          : isSaved // ignore: cast_nullable_to_non_nullable
               as bool,
       createdAt: null == createdAt
           ? _value.createdAt
           : createdAt // ignore: cast_nullable_to_non_nullable
               as DateTime,
-      updatedAt: freezed == updatedAt
+      updatedAt: null == updatedAt
           ? _value.updatedAt
           : updatedAt // ignore: cast_nullable_to_non_nullable
-              as DateTime?,
+              as DateTime,
     ) as $Val);
   }
 }
@@ -151,15 +172,18 @@ abstract class _$$SharedDrawingImplCopyWith<$Res>
       {String id,
       String userId,
       String userName,
-      String userProfileImage,
+      String displayName,
+      String? userPhotoURL,
       String imageUrl,
       String title,
       String? description,
-      int likes,
-      int comments,
-      bool isPublic,
+      int likesCount,
+      int savesCount,
+      int commentsCount,
+      bool isLiked,
+      bool isSaved,
       DateTime createdAt,
-      DateTime? updatedAt});
+      DateTime updatedAt});
 }
 
 /// @nodoc
@@ -176,15 +200,18 @@ class __$$SharedDrawingImplCopyWithImpl<$Res>
     Object? id = null,
     Object? userId = null,
     Object? userName = null,
-    Object? userProfileImage = null,
+    Object? displayName = null,
+    Object? userPhotoURL = freezed,
     Object? imageUrl = null,
     Object? title = null,
     Object? description = freezed,
-    Object? likes = null,
-    Object? comments = null,
-    Object? isPublic = null,
+    Object? likesCount = null,
+    Object? savesCount = null,
+    Object? commentsCount = null,
+    Object? isLiked = null,
+    Object? isSaved = null,
     Object? createdAt = null,
-    Object? updatedAt = freezed,
+    Object? updatedAt = null,
   }) {
     return _then(_$SharedDrawingImpl(
       id: null == id
@@ -199,10 +226,14 @@ class __$$SharedDrawingImplCopyWithImpl<$Res>
           ? _value.userName
           : userName // ignore: cast_nullable_to_non_nullable
               as String,
-      userProfileImage: null == userProfileImage
-          ? _value.userProfileImage
-          : userProfileImage // ignore: cast_nullable_to_non_nullable
+      displayName: null == displayName
+          ? _value.displayName
+          : displayName // ignore: cast_nullable_to_non_nullable
               as String,
+      userPhotoURL: freezed == userPhotoURL
+          ? _value.userPhotoURL
+          : userPhotoURL // ignore: cast_nullable_to_non_nullable
+              as String?,
       imageUrl: null == imageUrl
           ? _value.imageUrl
           : imageUrl // ignore: cast_nullable_to_non_nullable
@@ -215,46 +246,58 @@ class __$$SharedDrawingImplCopyWithImpl<$Res>
           ? _value.description
           : description // ignore: cast_nullable_to_non_nullable
               as String?,
-      likes: null == likes
-          ? _value.likes
-          : likes // ignore: cast_nullable_to_non_nullable
+      likesCount: null == likesCount
+          ? _value.likesCount
+          : likesCount // ignore: cast_nullable_to_non_nullable
               as int,
-      comments: null == comments
-          ? _value.comments
-          : comments // ignore: cast_nullable_to_non_nullable
+      savesCount: null == savesCount
+          ? _value.savesCount
+          : savesCount // ignore: cast_nullable_to_non_nullable
               as int,
-      isPublic: null == isPublic
-          ? _value.isPublic
-          : isPublic // ignore: cast_nullable_to_non_nullable
+      commentsCount: null == commentsCount
+          ? _value.commentsCount
+          : commentsCount // ignore: cast_nullable_to_non_nullable
+              as int,
+      isLiked: null == isLiked
+          ? _value.isLiked
+          : isLiked // ignore: cast_nullable_to_non_nullable
+              as bool,
+      isSaved: null == isSaved
+          ? _value.isSaved
+          : isSaved // ignore: cast_nullable_to_non_nullable
               as bool,
       createdAt: null == createdAt
           ? _value.createdAt
           : createdAt // ignore: cast_nullable_to_non_nullable
               as DateTime,
-      updatedAt: freezed == updatedAt
+      updatedAt: null == updatedAt
           ? _value.updatedAt
           : updatedAt // ignore: cast_nullable_to_non_nullable
-              as DateTime?,
+              as DateTime,
     ));
   }
 }
 
 /// @nodoc
 @JsonSerializable()
-class _$SharedDrawingImpl implements _SharedDrawing {
+class _$SharedDrawingImpl extends _SharedDrawing {
   const _$SharedDrawingImpl(
       {required this.id,
       required this.userId,
       required this.userName,
-      required this.userProfileImage,
+      required this.displayName,
+      this.userPhotoURL,
       required this.imageUrl,
       required this.title,
       this.description,
-      this.likes = 0,
-      this.comments = 0,
-      this.isPublic = false,
+      this.likesCount = 0,
+      this.savesCount = 0,
+      this.commentsCount = 0,
+      this.isLiked = false,
+      this.isSaved = false,
       required this.createdAt,
-      this.updatedAt});
+      required this.updatedAt})
+      : super._();
 
   factory _$SharedDrawingImpl.fromJson(Map<String, dynamic> json) =>
       _$$SharedDrawingImplFromJson(json);
@@ -266,7 +309,9 @@ class _$SharedDrawingImpl implements _SharedDrawing {
   @override
   final String userName;
   @override
-  final String userProfileImage;
+  final String displayName;
+  @override
+  final String? userPhotoURL;
   @override
   final String imageUrl;
   @override
@@ -275,21 +320,27 @@ class _$SharedDrawingImpl implements _SharedDrawing {
   final String? description;
   @override
   @JsonKey()
-  final int likes;
+  final int likesCount;
   @override
   @JsonKey()
-  final int comments;
+  final int savesCount;
   @override
   @JsonKey()
-  final bool isPublic;
+  final int commentsCount;
+  @override
+  @JsonKey()
+  final bool isLiked;
+  @override
+  @JsonKey()
+  final bool isSaved;
   @override
   final DateTime createdAt;
   @override
-  final DateTime? updatedAt;
+  final DateTime updatedAt;
 
   @override
   String toString() {
-    return 'SharedDrawing(id: $id, userId: $userId, userName: $userName, userProfileImage: $userProfileImage, imageUrl: $imageUrl, title: $title, description: $description, likes: $likes, comments: $comments, isPublic: $isPublic, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'SharedDrawing(id: $id, userId: $userId, userName: $userName, displayName: $displayName, userPhotoURL: $userPhotoURL, imageUrl: $imageUrl, title: $title, description: $description, likesCount: $likesCount, savesCount: $savesCount, commentsCount: $commentsCount, isLiked: $isLiked, isSaved: $isSaved, createdAt: $createdAt, updatedAt: $updatedAt)';
   }
 
   @override
@@ -301,18 +352,23 @@ class _$SharedDrawingImpl implements _SharedDrawing {
             (identical(other.userId, userId) || other.userId == userId) &&
             (identical(other.userName, userName) ||
                 other.userName == userName) &&
-            (identical(other.userProfileImage, userProfileImage) ||
-                other.userProfileImage == userProfileImage) &&
+            (identical(other.displayName, displayName) ||
+                other.displayName == displayName) &&
+            (identical(other.userPhotoURL, userPhotoURL) ||
+                other.userPhotoURL == userPhotoURL) &&
             (identical(other.imageUrl, imageUrl) ||
                 other.imageUrl == imageUrl) &&
             (identical(other.title, title) || other.title == title) &&
             (identical(other.description, description) ||
                 other.description == description) &&
-            (identical(other.likes, likes) || other.likes == likes) &&
-            (identical(other.comments, comments) ||
-                other.comments == comments) &&
-            (identical(other.isPublic, isPublic) ||
-                other.isPublic == isPublic) &&
+            (identical(other.likesCount, likesCount) ||
+                other.likesCount == likesCount) &&
+            (identical(other.savesCount, savesCount) ||
+                other.savesCount == savesCount) &&
+            (identical(other.commentsCount, commentsCount) ||
+                other.commentsCount == commentsCount) &&
+            (identical(other.isLiked, isLiked) || other.isLiked == isLiked) &&
+            (identical(other.isSaved, isSaved) || other.isSaved == isSaved) &&
             (identical(other.createdAt, createdAt) ||
                 other.createdAt == createdAt) &&
             (identical(other.updatedAt, updatedAt) ||
@@ -326,13 +382,16 @@ class _$SharedDrawingImpl implements _SharedDrawing {
       id,
       userId,
       userName,
-      userProfileImage,
+      displayName,
+      userPhotoURL,
       imageUrl,
       title,
       description,
-      likes,
-      comments,
-      isPublic,
+      likesCount,
+      savesCount,
+      commentsCount,
+      isLiked,
+      isSaved,
       createdAt,
       updatedAt);
 
@@ -350,20 +409,24 @@ class _$SharedDrawingImpl implements _SharedDrawing {
   }
 }
 
-abstract class _SharedDrawing implements SharedDrawing {
+abstract class _SharedDrawing extends SharedDrawing {
   const factory _SharedDrawing(
       {required final String id,
       required final String userId,
       required final String userName,
-      required final String userProfileImage,
+      required final String displayName,
+      final String? userPhotoURL,
       required final String imageUrl,
       required final String title,
       final String? description,
-      final int likes,
-      final int comments,
-      final bool isPublic,
+      final int likesCount,
+      final int savesCount,
+      final int commentsCount,
+      final bool isLiked,
+      final bool isSaved,
       required final DateTime createdAt,
-      final DateTime? updatedAt}) = _$SharedDrawingImpl;
+      required final DateTime updatedAt}) = _$SharedDrawingImpl;
+  const _SharedDrawing._() : super._();
 
   factory _SharedDrawing.fromJson(Map<String, dynamic> json) =
       _$SharedDrawingImpl.fromJson;
@@ -375,7 +438,9 @@ abstract class _SharedDrawing implements SharedDrawing {
   @override
   String get userName;
   @override
-  String get userProfileImage;
+  String get displayName;
+  @override
+  String? get userPhotoURL;
   @override
   String get imageUrl;
   @override
@@ -383,15 +448,19 @@ abstract class _SharedDrawing implements SharedDrawing {
   @override
   String? get description;
   @override
-  int get likes;
+  int get likesCount;
   @override
-  int get comments;
+  int get savesCount;
   @override
-  bool get isPublic;
+  int get commentsCount;
+  @override
+  bool get isLiked;
+  @override
+  bool get isSaved;
   @override
   DateTime get createdAt;
   @override
-  DateTime? get updatedAt;
+  DateTime get updatedAt;
   @override
   @JsonKey(ignore: true)
   _$$SharedDrawingImplCopyWith<_$SharedDrawingImpl> get copyWith =>

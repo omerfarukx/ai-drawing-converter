@@ -3,7 +3,7 @@
 // ignore_for_file: type=lint
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
-part of 'user_profile_model.dart';
+part of 'user_profile.dart';
 
 // **************************************************************************
 // FreezedGenerator
@@ -21,22 +21,15 @@ UserProfile _$UserProfileFromJson(Map<String, dynamic> json) {
 /// @nodoc
 mixin _$UserProfile {
   String get id => throw _privateConstructorUsedError;
+  String get email => throw _privateConstructorUsedError;
   String get username => throw _privateConstructorUsedError;
   String get displayName => throw _privateConstructorUsedError;
-  @JsonKey(name: 'photoURL')
-  String? get photoUrl => throw _privateConstructorUsedError;
+  String? get photoURL => throw _privateConstructorUsedError;
   String? get bio => throw _privateConstructorUsedError;
-  int get drawingsCount => throw _privateConstructorUsedError;
   int get followersCount => throw _privateConstructorUsedError;
   int get followingCount => throw _privateConstructorUsedError;
-  int get savedDrawingsCount => throw _privateConstructorUsedError;
+  int get drawingsCount => throw _privateConstructorUsedError;
   bool get isFollowing => throw _privateConstructorUsedError;
-  List<String> get followers => throw _privateConstructorUsedError;
-  List<String> get following => throw _privateConstructorUsedError;
-  @JsonKey(fromJson: _dateTimeFromTimestamp, toJson: _dateTimeToTimestamp)
-  DateTime? get createdAt => throw _privateConstructorUsedError;
-  @JsonKey(fromJson: _dateTimeFromTimestamp, toJson: _dateTimeToTimestamp)
-  DateTime? get lastLoginAt => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
@@ -52,21 +45,15 @@ abstract class $UserProfileCopyWith<$Res> {
   @useResult
   $Res call(
       {String id,
+      String email,
       String username,
       String displayName,
-      @JsonKey(name: 'photoURL') String? photoUrl,
+      String? photoURL,
       String? bio,
-      int drawingsCount,
       int followersCount,
       int followingCount,
-      int savedDrawingsCount,
-      bool isFollowing,
-      List<String> followers,
-      List<String> following,
-      @JsonKey(fromJson: _dateTimeFromTimestamp, toJson: _dateTimeToTimestamp)
-      DateTime? createdAt,
-      @JsonKey(fromJson: _dateTimeFromTimestamp, toJson: _dateTimeToTimestamp)
-      DateTime? lastLoginAt});
+      int drawingsCount,
+      bool isFollowing});
 }
 
 /// @nodoc
@@ -83,24 +70,24 @@ class _$UserProfileCopyWithImpl<$Res, $Val extends UserProfile>
   @override
   $Res call({
     Object? id = null,
+    Object? email = null,
     Object? username = null,
     Object? displayName = null,
-    Object? photoUrl = freezed,
+    Object? photoURL = freezed,
     Object? bio = freezed,
-    Object? drawingsCount = null,
     Object? followersCount = null,
     Object? followingCount = null,
-    Object? savedDrawingsCount = null,
+    Object? drawingsCount = null,
     Object? isFollowing = null,
-    Object? followers = null,
-    Object? following = null,
-    Object? createdAt = freezed,
-    Object? lastLoginAt = freezed,
   }) {
     return _then(_value.copyWith(
       id: null == id
           ? _value.id
           : id // ignore: cast_nullable_to_non_nullable
+              as String,
+      email: null == email
+          ? _value.email
+          : email // ignore: cast_nullable_to_non_nullable
               as String,
       username: null == username
           ? _value.username
@@ -110,18 +97,14 @@ class _$UserProfileCopyWithImpl<$Res, $Val extends UserProfile>
           ? _value.displayName
           : displayName // ignore: cast_nullable_to_non_nullable
               as String,
-      photoUrl: freezed == photoUrl
-          ? _value.photoUrl
-          : photoUrl // ignore: cast_nullable_to_non_nullable
+      photoURL: freezed == photoURL
+          ? _value.photoURL
+          : photoURL // ignore: cast_nullable_to_non_nullable
               as String?,
       bio: freezed == bio
           ? _value.bio
           : bio // ignore: cast_nullable_to_non_nullable
               as String?,
-      drawingsCount: null == drawingsCount
-          ? _value.drawingsCount
-          : drawingsCount // ignore: cast_nullable_to_non_nullable
-              as int,
       followersCount: null == followersCount
           ? _value.followersCount
           : followersCount // ignore: cast_nullable_to_non_nullable
@@ -130,30 +113,14 @@ class _$UserProfileCopyWithImpl<$Res, $Val extends UserProfile>
           ? _value.followingCount
           : followingCount // ignore: cast_nullable_to_non_nullable
               as int,
-      savedDrawingsCount: null == savedDrawingsCount
-          ? _value.savedDrawingsCount
-          : savedDrawingsCount // ignore: cast_nullable_to_non_nullable
+      drawingsCount: null == drawingsCount
+          ? _value.drawingsCount
+          : drawingsCount // ignore: cast_nullable_to_non_nullable
               as int,
       isFollowing: null == isFollowing
           ? _value.isFollowing
           : isFollowing // ignore: cast_nullable_to_non_nullable
               as bool,
-      followers: null == followers
-          ? _value.followers
-          : followers // ignore: cast_nullable_to_non_nullable
-              as List<String>,
-      following: null == following
-          ? _value.following
-          : following // ignore: cast_nullable_to_non_nullable
-              as List<String>,
-      createdAt: freezed == createdAt
-          ? _value.createdAt
-          : createdAt // ignore: cast_nullable_to_non_nullable
-              as DateTime?,
-      lastLoginAt: freezed == lastLoginAt
-          ? _value.lastLoginAt
-          : lastLoginAt // ignore: cast_nullable_to_non_nullable
-              as DateTime?,
     ) as $Val);
   }
 }
@@ -168,21 +135,15 @@ abstract class _$$UserProfileImplCopyWith<$Res>
   @useResult
   $Res call(
       {String id,
+      String email,
       String username,
       String displayName,
-      @JsonKey(name: 'photoURL') String? photoUrl,
+      String? photoURL,
       String? bio,
-      int drawingsCount,
       int followersCount,
       int followingCount,
-      int savedDrawingsCount,
-      bool isFollowing,
-      List<String> followers,
-      List<String> following,
-      @JsonKey(fromJson: _dateTimeFromTimestamp, toJson: _dateTimeToTimestamp)
-      DateTime? createdAt,
-      @JsonKey(fromJson: _dateTimeFromTimestamp, toJson: _dateTimeToTimestamp)
-      DateTime? lastLoginAt});
+      int drawingsCount,
+      bool isFollowing});
 }
 
 /// @nodoc
@@ -197,24 +158,24 @@ class __$$UserProfileImplCopyWithImpl<$Res>
   @override
   $Res call({
     Object? id = null,
+    Object? email = null,
     Object? username = null,
     Object? displayName = null,
-    Object? photoUrl = freezed,
+    Object? photoURL = freezed,
     Object? bio = freezed,
-    Object? drawingsCount = null,
     Object? followersCount = null,
     Object? followingCount = null,
-    Object? savedDrawingsCount = null,
+    Object? drawingsCount = null,
     Object? isFollowing = null,
-    Object? followers = null,
-    Object? following = null,
-    Object? createdAt = freezed,
-    Object? lastLoginAt = freezed,
   }) {
     return _then(_$UserProfileImpl(
       id: null == id
           ? _value.id
           : id // ignore: cast_nullable_to_non_nullable
+              as String,
+      email: null == email
+          ? _value.email
+          : email // ignore: cast_nullable_to_non_nullable
               as String,
       username: null == username
           ? _value.username
@@ -224,18 +185,14 @@ class __$$UserProfileImplCopyWithImpl<$Res>
           ? _value.displayName
           : displayName // ignore: cast_nullable_to_non_nullable
               as String,
-      photoUrl: freezed == photoUrl
-          ? _value.photoUrl
-          : photoUrl // ignore: cast_nullable_to_non_nullable
+      photoURL: freezed == photoURL
+          ? _value.photoURL
+          : photoURL // ignore: cast_nullable_to_non_nullable
               as String?,
       bio: freezed == bio
           ? _value.bio
           : bio // ignore: cast_nullable_to_non_nullable
               as String?,
-      drawingsCount: null == drawingsCount
-          ? _value.drawingsCount
-          : drawingsCount // ignore: cast_nullable_to_non_nullable
-              as int,
       followersCount: null == followersCount
           ? _value.followersCount
           : followersCount // ignore: cast_nullable_to_non_nullable
@@ -244,30 +201,14 @@ class __$$UserProfileImplCopyWithImpl<$Res>
           ? _value.followingCount
           : followingCount // ignore: cast_nullable_to_non_nullable
               as int,
-      savedDrawingsCount: null == savedDrawingsCount
-          ? _value.savedDrawingsCount
-          : savedDrawingsCount // ignore: cast_nullable_to_non_nullable
+      drawingsCount: null == drawingsCount
+          ? _value.drawingsCount
+          : drawingsCount // ignore: cast_nullable_to_non_nullable
               as int,
       isFollowing: null == isFollowing
           ? _value.isFollowing
           : isFollowing // ignore: cast_nullable_to_non_nullable
               as bool,
-      followers: null == followers
-          ? _value._followers
-          : followers // ignore: cast_nullable_to_non_nullable
-              as List<String>,
-      following: null == following
-          ? _value._following
-          : following // ignore: cast_nullable_to_non_nullable
-              as List<String>,
-      createdAt: freezed == createdAt
-          ? _value.createdAt
-          : createdAt // ignore: cast_nullable_to_non_nullable
-              as DateTime?,
-      lastLoginAt: freezed == lastLoginAt
-          ? _value.lastLoginAt
-          : lastLoginAt // ignore: cast_nullable_to_non_nullable
-              as DateTime?,
     ));
   }
 }
@@ -277,23 +218,15 @@ class __$$UserProfileImplCopyWithImpl<$Res>
 class _$UserProfileImpl implements _UserProfile {
   const _$UserProfileImpl(
       {required this.id,
+      required this.email,
       required this.username,
       required this.displayName,
-      @JsonKey(name: 'photoURL') this.photoUrl,
+      this.photoURL,
       this.bio,
-      this.drawingsCount = 0,
       this.followersCount = 0,
       this.followingCount = 0,
-      this.savedDrawingsCount = 0,
-      this.isFollowing = false,
-      final List<String> followers = const [],
-      final List<String> following = const [],
-      @JsonKey(fromJson: _dateTimeFromTimestamp, toJson: _dateTimeToTimestamp)
-      this.createdAt,
-      @JsonKey(fromJson: _dateTimeFromTimestamp, toJson: _dateTimeToTimestamp)
-      this.lastLoginAt})
-      : _followers = followers,
-        _following = following;
+      this.drawingsCount = 0,
+      this.isFollowing = false});
 
   factory _$UserProfileImpl.fromJson(Map<String, dynamic> json) =>
       _$$UserProfileImplFromJson(json);
@@ -301,17 +234,15 @@ class _$UserProfileImpl implements _UserProfile {
   @override
   final String id;
   @override
+  final String email;
+  @override
   final String username;
   @override
   final String displayName;
   @override
-  @JsonKey(name: 'photoURL')
-  final String? photoUrl;
+  final String? photoURL;
   @override
   final String? bio;
-  @override
-  @JsonKey()
-  final int drawingsCount;
   @override
   @JsonKey()
   final int followersCount;
@@ -320,38 +251,14 @@ class _$UserProfileImpl implements _UserProfile {
   final int followingCount;
   @override
   @JsonKey()
-  final int savedDrawingsCount;
+  final int drawingsCount;
   @override
   @JsonKey()
   final bool isFollowing;
-  final List<String> _followers;
-  @override
-  @JsonKey()
-  List<String> get followers {
-    if (_followers is EqualUnmodifiableListView) return _followers;
-    // ignore: implicit_dynamic_type
-    return EqualUnmodifiableListView(_followers);
-  }
-
-  final List<String> _following;
-  @override
-  @JsonKey()
-  List<String> get following {
-    if (_following is EqualUnmodifiableListView) return _following;
-    // ignore: implicit_dynamic_type
-    return EqualUnmodifiableListView(_following);
-  }
-
-  @override
-  @JsonKey(fromJson: _dateTimeFromTimestamp, toJson: _dateTimeToTimestamp)
-  final DateTime? createdAt;
-  @override
-  @JsonKey(fromJson: _dateTimeFromTimestamp, toJson: _dateTimeToTimestamp)
-  final DateTime? lastLoginAt;
 
   @override
   String toString() {
-    return 'UserProfile(id: $id, username: $username, displayName: $displayName, photoUrl: $photoUrl, bio: $bio, drawingsCount: $drawingsCount, followersCount: $followersCount, followingCount: $followingCount, savedDrawingsCount: $savedDrawingsCount, isFollowing: $isFollowing, followers: $followers, following: $following, createdAt: $createdAt, lastLoginAt: $lastLoginAt)';
+    return 'UserProfile(id: $id, email: $email, username: $username, displayName: $displayName, photoURL: $photoURL, bio: $bio, followersCount: $followersCount, followingCount: $followingCount, drawingsCount: $drawingsCount, isFollowing: $isFollowing)';
   }
 
   @override
@@ -360,31 +267,22 @@ class _$UserProfileImpl implements _UserProfile {
         (other.runtimeType == runtimeType &&
             other is _$UserProfileImpl &&
             (identical(other.id, id) || other.id == id) &&
+            (identical(other.email, email) || other.email == email) &&
             (identical(other.username, username) ||
                 other.username == username) &&
             (identical(other.displayName, displayName) ||
                 other.displayName == displayName) &&
-            (identical(other.photoUrl, photoUrl) ||
-                other.photoUrl == photoUrl) &&
+            (identical(other.photoURL, photoURL) ||
+                other.photoURL == photoURL) &&
             (identical(other.bio, bio) || other.bio == bio) &&
-            (identical(other.drawingsCount, drawingsCount) ||
-                other.drawingsCount == drawingsCount) &&
             (identical(other.followersCount, followersCount) ||
                 other.followersCount == followersCount) &&
             (identical(other.followingCount, followingCount) ||
                 other.followingCount == followingCount) &&
-            (identical(other.savedDrawingsCount, savedDrawingsCount) ||
-                other.savedDrawingsCount == savedDrawingsCount) &&
+            (identical(other.drawingsCount, drawingsCount) ||
+                other.drawingsCount == drawingsCount) &&
             (identical(other.isFollowing, isFollowing) ||
-                other.isFollowing == isFollowing) &&
-            const DeepCollectionEquality()
-                .equals(other._followers, _followers) &&
-            const DeepCollectionEquality()
-                .equals(other._following, _following) &&
-            (identical(other.createdAt, createdAt) ||
-                other.createdAt == createdAt) &&
-            (identical(other.lastLoginAt, lastLoginAt) ||
-                other.lastLoginAt == lastLoginAt));
+                other.isFollowing == isFollowing));
   }
 
   @JsonKey(ignore: true)
@@ -392,19 +290,15 @@ class _$UserProfileImpl implements _UserProfile {
   int get hashCode => Object.hash(
       runtimeType,
       id,
+      email,
       username,
       displayName,
-      photoUrl,
+      photoURL,
       bio,
-      drawingsCount,
       followersCount,
       followingCount,
-      savedDrawingsCount,
-      isFollowing,
-      const DeepCollectionEquality().hash(_followers),
-      const DeepCollectionEquality().hash(_following),
-      createdAt,
-      lastLoginAt);
+      drawingsCount,
+      isFollowing);
 
   @JsonKey(ignore: true)
   @override
@@ -423,21 +317,15 @@ class _$UserProfileImpl implements _UserProfile {
 abstract class _UserProfile implements UserProfile {
   const factory _UserProfile(
       {required final String id,
+      required final String email,
       required final String username,
       required final String displayName,
-      @JsonKey(name: 'photoURL') final String? photoUrl,
+      final String? photoURL,
       final String? bio,
-      final int drawingsCount,
       final int followersCount,
       final int followingCount,
-      final int savedDrawingsCount,
-      final bool isFollowing,
-      final List<String> followers,
-      final List<String> following,
-      @JsonKey(fromJson: _dateTimeFromTimestamp, toJson: _dateTimeToTimestamp)
-      final DateTime? createdAt,
-      @JsonKey(fromJson: _dateTimeFromTimestamp, toJson: _dateTimeToTimestamp)
-      final DateTime? lastLoginAt}) = _$UserProfileImpl;
+      final int drawingsCount,
+      final bool isFollowing}) = _$UserProfileImpl;
 
   factory _UserProfile.fromJson(Map<String, dynamic> json) =
       _$UserProfileImpl.fromJson;
@@ -445,34 +333,23 @@ abstract class _UserProfile implements UserProfile {
   @override
   String get id;
   @override
+  String get email;
+  @override
   String get username;
   @override
   String get displayName;
   @override
-  @JsonKey(name: 'photoURL')
-  String? get photoUrl;
+  String? get photoURL;
   @override
   String? get bio;
-  @override
-  int get drawingsCount;
   @override
   int get followersCount;
   @override
   int get followingCount;
   @override
-  int get savedDrawingsCount;
+  int get drawingsCount;
   @override
   bool get isFollowing;
-  @override
-  List<String> get followers;
-  @override
-  List<String> get following;
-  @override
-  @JsonKey(fromJson: _dateTimeFromTimestamp, toJson: _dateTimeToTimestamp)
-  DateTime? get createdAt;
-  @override
-  @JsonKey(fromJson: _dateTimeFromTimestamp, toJson: _dateTimeToTimestamp)
-  DateTime? get lastLoginAt;
   @override
   @JsonKey(ignore: true)
   _$$UserProfileImplCopyWith<_$UserProfileImpl> get copyWith =>

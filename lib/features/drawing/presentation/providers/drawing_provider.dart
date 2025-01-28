@@ -1,6 +1,9 @@
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/models/drawing_point.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'dart:typed_data';
 
 class DrawingState {
   final List<DrawingPoint> currentLine;
@@ -59,6 +62,41 @@ class DrawingState {
       isErasing: isErasing ?? this.isErasing,
       currentPaint: currentPaint ?? this.currentPaint,
     );
+  }
+
+  Future<String> saveToImage() async {
+    final recorder = ui.PictureRecorder();
+    final canvas = Canvas(recorder);
+
+    // Beyaz arka plan
+    canvas.drawRect(
+      Rect.largest,
+      Paint()..color = Colors.white,
+    );
+
+    // Tüm çizim noktalarını çiz
+    for (var line in lines) {
+      for (var i = 0; i < line.length - 1; i++) {
+        final current = line[i];
+        final next = line[i + 1];
+        canvas.drawLine(current.point, next.point, current.paint);
+      }
+    }
+
+    final picture = recorder.endRecording();
+    final img = await picture.toImage(512, 512); // 512x512 boyutunda kaydet
+    final pngBytes = await img.toByteData(format: ui.ImageByteFormat.png);
+    final buffer = pngBytes!.buffer.asUint8List();
+
+    // Firebase Storage'a yükle
+    final storage = FirebaseStorage.instance;
+    final fileName = 'drawings/${DateTime.now().millisecondsSinceEpoch}.png';
+    final ref = storage.ref().child(fileName);
+
+    await ref.putData(buffer);
+    final url = await ref.getDownloadURL();
+
+    return url;
   }
 }
 

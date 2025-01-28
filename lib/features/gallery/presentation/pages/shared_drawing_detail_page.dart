@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../../domain/models/shared_drawing.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class SharedDrawingDetailPage extends ConsumerWidget {
   final SharedDrawing drawing;
@@ -41,33 +42,52 @@ class SharedDrawingDetailPage extends ConsumerWidget {
               background: Stack(
                 fit: StackFit.expand,
                 children: [
-                  Image.network(
-                    drawing.imageUrl,
-                    fit: BoxFit.cover,
-                    loadingBuilder: (context, child, loadingProgress) {
-                      if (loadingProgress == null) return child;
-                      return Center(
-                        child: CircularProgressIndicator(
-                          value: loadingProgress.expectedTotalBytes != null
-                              ? loadingProgress.cumulativeBytesLoaded /
-                                  loadingProgress.expectedTotalBytes!
-                              : null,
-                          color: const Color(0xFF533483),
-                        ),
-                      );
-                    },
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        color: Colors.grey[200],
-                        child: const Center(
-                          child: Icon(
-                            Icons.error_outline,
-                            color: Colors.grey,
-                            size: 48,
+                  Hero(
+                    tag: 'drawing_${drawing.id}',
+                    child: Material(
+                      type: MaterialType.transparency,
+                      child: CachedNetworkImage(
+                        imageUrl: drawing.imageUrl,
+                        fit: BoxFit.cover,
+                        fadeInDuration: const Duration(milliseconds: 300),
+                        fadeOutDuration: const Duration(milliseconds: 300),
+                        placeholder: (context, url) => Container(
+                          color: const Color(0xFF1A1A2E),
+                          child: const Center(
+                            child: CircularProgressIndicator(
+                              color: Color(0xFF533483),
+                            ),
                           ),
                         ),
-                      );
-                    },
+                        errorWidget: (context, url, error) {
+                          print(
+                              'Debug: Detay sayfası resim hatası - URL: $url, Hata: $error');
+                          return Container(
+                            color: const Color(0xFF1A1A2E),
+                            child: const Center(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.error_outline,
+                                    color: Colors.white,
+                                    size: 48,
+                                  ),
+                                  SizedBox(height: 8),
+                                  Text(
+                                    'Resim yüklenemedi',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
                   ),
                   Container(
                     decoration: BoxDecoration(
@@ -123,10 +143,10 @@ class SharedDrawingDetailPage extends ConsumerWidget {
                     children: [
                       CircleAvatar(
                         radius: 24,
-                        backgroundImage: drawing.userProfileImage.isNotEmpty
-                            ? NetworkImage(drawing.userProfileImage)
+                        backgroundImage: drawing.userPhotoURL != null
+                            ? NetworkImage(drawing.userPhotoURL!)
                             : null,
-                        child: drawing.userProfileImage.isEmpty
+                        child: drawing.userPhotoURL == null
                             ? const Icon(
                                 Icons.person,
                                 color: Colors.white,
@@ -183,13 +203,13 @@ class SharedDrawingDetailPage extends ConsumerWidget {
                     children: [
                       _StatItem(
                         icon: Icons.favorite,
-                        value: drawing.likes,
+                        value: drawing.likesCount,
                         label: 'Beğeni',
                       ),
                       const SizedBox(width: 24),
                       _StatItem(
                         icon: Icons.chat_bubble,
-                        value: drawing.comments,
+                        value: drawing.commentsCount,
                         label: 'Yorum',
                       ),
                     ],

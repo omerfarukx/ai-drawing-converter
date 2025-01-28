@@ -2,7 +2,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
-import '../../domain/models/user_profile_model.dart';
+import 'package:permission_handler/permission_handler.dart';
+import '../../domain/models/user_profile.dart';
 import '../../domain/services/social_service.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../../../core/services/firestore_service.dart';
@@ -10,6 +11,8 @@ import '../../../drawing/presentation/providers/ai_credits_provider.dart';
 import '../providers/social_provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/domain/models/auth_state.dart';
+import 'package:device_info_plus/device_info_plus.dart';
+import '../../../../core/providers/database_provider.dart';
 
 class ProfileHeaderWidget extends ConsumerStatefulWidget {
   final UserProfile profile;
@@ -36,13 +39,27 @@ class _ProfileHeaderWidgetState extends ConsumerState<ProfileHeaderWidget> {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(16, 32, 16, 24),
       decoration: BoxDecoration(
-        color: Theme.of(context).primaryColor,
+        gradient: LinearGradient(
+          colors: [
+            const Color(0xFF2C1B47),
+            const Color(0xFF0B1221),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         borderRadius: const BorderRadius.only(
           bottomLeft: Radius.circular(30),
           bottomRight: Radius.circular(30),
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.3),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          ),
+        ],
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -51,25 +68,38 @@ class _ProfileHeaderWidgetState extends ConsumerState<ProfileHeaderWidget> {
           // Kredi Bilgisi
           if (widget.isCurrentUser)
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               decoration: BoxDecoration(
                 color: Colors.white.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.2),
+                  width: 1,
+                ),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(
-                    Icons.stars_rounded,
-                    color: Colors.amber,
-                    size: 20,
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.amber.withOpacity(0.2),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.stars_rounded,
+                      color: Colors.amber,
+                      size: 20,
+                    ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 12),
                   Text(
                     '$credits Kredi',
                     style: const TextStyle(
                       color: Colors.white,
+                      fontSize: 16,
                       fontWeight: FontWeight.bold,
+                      letterSpacing: 0.5,
                     ),
                   ),
                 ],
@@ -80,16 +110,34 @@ class _ProfileHeaderWidgetState extends ConsumerState<ProfileHeaderWidget> {
           // Avatar
           Stack(
             children: [
-              CircleAvatar(
-                radius: 50,
-                backgroundColor: Colors.white,
-                backgroundImage: widget.profile.photoUrl != null
-                    ? NetworkImage(widget.profile.photoUrl!)
-                    : null,
-                child: widget.profile.photoUrl == null
-                    ? const Icon(Icons.person,
-                        size: 50, color: Colors.deepPurple)
-                    : null,
+              Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF533483).withOpacity(0.3),
+                      blurRadius: 20,
+                      spreadRadius: 5,
+                    ),
+                  ],
+                ),
+                child: Hero(
+                  tag: 'profile_${widget.profile.id}',
+                  child: CircleAvatar(
+                    radius: 50,
+                    backgroundColor: Colors.white.withOpacity(0.1),
+                    backgroundImage: widget.profile.photoURL != null
+                        ? NetworkImage(widget.profile.photoURL!)
+                        : null,
+                    child: widget.profile.photoURL == null
+                        ? Icon(
+                            Icons.person,
+                            size: 50,
+                            color: Colors.white.withOpacity(0.7),
+                          )
+                        : null,
+                  ),
+                ),
               ),
               if (widget.isCurrentUser)
                 Positioned(
@@ -98,14 +146,24 @@ class _ProfileHeaderWidgetState extends ConsumerState<ProfileHeaderWidget> {
                   child: GestureDetector(
                     onTap: () => _handleImageUpload(context, ref),
                     child: Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF533483),
                         shape: BoxShape.circle,
+                        border: Border.all(
+                          color: Colors.white,
+                          width: 2,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.2),
+                            blurRadius: 5,
+                          ),
+                        ],
                       ),
                       child: const Icon(
                         Icons.add_a_photo,
-                        color: Colors.deepPurple,
+                        color: Colors.white,
                         size: 20,
                       ),
                     ),
@@ -113,7 +171,7 @@ class _ProfileHeaderWidgetState extends ConsumerState<ProfileHeaderWidget> {
                 ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
 
           // İsim
           GestureDetector(
@@ -129,20 +187,28 @@ class _ProfileHeaderWidgetState extends ConsumerState<ProfileHeaderWidget> {
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
+                    letterSpacing: 0.5,
                   ),
                 ),
                 if (widget.isCurrentUser) ...[
-                  const SizedBox(width: 4),
-                  Icon(
-                    Icons.edit,
-                    size: 16,
-                    color: Colors.white.withOpacity(0.8),
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.edit,
+                      size: 16,
+                      color: Colors.white.withOpacity(0.9),
+                    ),
                   ),
                 ],
               ],
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 8),
 
           // Kullanıcı adı
           GestureDetector(
@@ -156,21 +222,22 @@ class _ProfileHeaderWidgetState extends ConsumerState<ProfileHeaderWidget> {
                   '@${widget.profile.username}',
                   style: TextStyle(
                     fontSize: 16,
-                    color: Colors.white.withOpacity(0.8),
+                    color: Colors.white.withOpacity(0.7),
+                    letterSpacing: 0.5,
                   ),
                 ),
                 if (widget.isCurrentUser) ...[
                   const SizedBox(width: 4),
                   Icon(
                     Icons.edit,
-                    size: 16,
-                    color: Colors.white.withOpacity(0.8),
+                    size: 14,
+                    color: Colors.white.withOpacity(0.7),
                   ),
                 ],
               ],
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
 
           // Bio
           GestureDetector(
@@ -180,10 +247,14 @@ class _ProfileHeaderWidgetState extends ConsumerState<ProfileHeaderWidget> {
             child: Container(
               width: double.infinity,
               margin: const EdgeInsets.symmetric(horizontal: 32),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               decoration: BoxDecoration(
                 color: Colors.white.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.1),
+                  width: 1,
+                ),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -201,15 +272,23 @@ class _ProfileHeaderWidgetState extends ConsumerState<ProfileHeaderWidget> {
                         fontStyle: widget.profile.bio != null
                             ? FontStyle.normal
                             : FontStyle.italic,
+                        letterSpacing: 0.3,
                       ),
                     ),
                   ),
                   if (widget.isCurrentUser) ...[
-                    const SizedBox(width: 4),
-                    Icon(
-                      Icons.edit,
-                      size: 14,
-                      color: Colors.white.withOpacity(0.8),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.edit,
+                        size: 14,
+                        color: Colors.white.withOpacity(0.7),
+                      ),
                     ),
                   ],
                 ],
@@ -219,52 +298,76 @@ class _ProfileHeaderWidgetState extends ConsumerState<ProfileHeaderWidget> {
 
           // Takip Et / Takibi Bırak Butonu
           if (!widget.isCurrentUser) ...[
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
             authState.map(
               initial: (_) => const SizedBox(),
-              loading: (_) => const Center(child: CircularProgressIndicator()),
-              authenticated: (state) => SizedBox(
-                width: 200,
-                child: MouseRegion(
-                  onEnter: (_) => setState(() => _isHovered = true),
-                  onExit: (_) => setState(() => _isHovered = false),
-                  child: ElevatedButton(
-                    onPressed: () =>
-                        _handleFollowAction(context, ref, state.user.id),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: widget.profile.isFollowing
+              loading: (_) => const CircularProgressIndicator(),
+              authenticated: (state) => MouseRegion(
+                onEnter: (_) => setState(() => _isHovered = true),
+                onExit: (_) => setState(() => _isHovered = false),
+                child: Container(
+                  width: 200,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: widget.profile.isFollowing
                           ? _isHovered
-                              ? Colors.red.withOpacity(0.1)
-                              : Colors.white.withOpacity(0.1)
-                          : Colors.white,
-                      foregroundColor: widget.profile.isFollowing
-                          ? _isHovered
-                              ? Colors.red
-                              : Colors.white
-                          : Colors.deepPurple,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 12,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                      ),
+                              ? [
+                                  Colors.red.withOpacity(0.5),
+                                  Colors.red.withOpacity(0.3),
+                                ]
+                              : [
+                                  Colors.white.withOpacity(0.2),
+                                  Colors.white.withOpacity(0.1),
+                                ]
+                          : [
+                              const Color(0xFF533483),
+                              const Color(0xFF16213E),
+                            ],
                     ),
-                    child: Text(
-                      widget.profile.isFollowing
-                          ? _isHovered
-                              ? 'Takibi Bırak'
-                              : 'Takip Ediliyor'
-                          : 'Takip Et',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
+                    borderRadius: BorderRadius.circular(22),
+                    border: Border.all(
+                      color: Colors.white.withOpacity(0.2),
+                      width: 1,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.2),
+                        blurRadius: 10,
+                        offset: const Offset(0, 5),
+                      ),
+                    ],
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: () =>
+                          _handleFollowAction(context, ref, state.user.id),
+                      borderRadius: BorderRadius.circular(22),
+                      child: Center(
+                        child: Text(
+                          widget.profile.isFollowing
+                              ? _isHovered
+                                  ? 'Takibi Bırak'
+                                  : 'Takip Ediliyor'
+                              : 'Takip Et',
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.9),
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
               unauthenticated: (_) => const SizedBox(),
-              error: (state) => Text('Hata: ${state.message}'),
+              error: (state) => Text(
+                'Hata: ${state.message}',
+                style: const TextStyle(color: Colors.red),
+              ),
             ),
           ],
         ],
@@ -278,51 +381,120 @@ class _ProfileHeaderWidgetState extends ConsumerState<ProfileHeaderWidget> {
     String currentUserId,
   ) async {
     try {
-      final socialService = ref.read(socialServiceProvider);
+      final database = ref.read(databaseProvider);
 
-      if (widget.profile.isFollowing) {
-        await socialService.unfollowUser(widget.profile.id);
-        if (!context.mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Takipten çıkıldı')),
-        );
-      } else {
-        await socialService.followUser(widget.profile.id);
-        if (!context.mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Takip edildi')),
-        );
-      }
+      // Takip/takipten çıkma işlemini yap
+      await database.followUser(
+        followerId: currentUserId,
+        followedId: widget.profile.id,
+      );
 
-      // Profilleri yenile
-      ref.invalidate(userProfileProvider(widget.profile.id));
-      ref.invalidate(currentUserProfileProvider);
-
-      // Takipçi ve takip edilen listelerini yenile
-      ref.invalidate(followersProvider(widget.profile.id));
-      ref.invalidate(followingProvider(currentUserId));
+      // Başarılı bildirimi göster
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.check_circle, color: Colors.white),
+              const SizedBox(width: 16),
+              Text(
+                widget.profile.isFollowing
+                    ? 'Takipten çıkıldı'
+                    : 'Takip edilmeye başlandı',
+              ),
+            ],
+          ),
+          backgroundColor: Colors.green,
+        ),
+      );
     } catch (e) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Hata: $e')),
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.error, color: Colors.white),
+              const SizedBox(width: 16),
+              Expanded(child: Text('Hata: $e')),
+            ],
+          ),
+          backgroundColor: Colors.red,
+        ),
       );
     }
   }
 
   Future<void> _handleImageUpload(BuildContext context, WidgetRef ref) async {
     try {
+      // Android 13 ve üzeri için izin kontrolü
+      if (Platform.isAndroid) {
+        final status = await Permission.photos.request();
+
+        if (status.isDenied) {
+          if (!context.mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Galeri izni reddedildi')),
+          );
+          return;
+        }
+
+        if (status.isPermanentlyDenied) {
+          if (!context.mounted) return;
+          showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text('İzin Gerekli'),
+              content: const Text(
+                  'Profil fotoğrafı yükleyebilmek için galeri iznine ihtiyacımız var. Ayarlardan izin verebilirsiniz.'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('İptal'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    openAppSettings();
+                  },
+                  child: const Text('Ayarlara Git'),
+                ),
+              ],
+            ),
+          );
+          return;
+        }
+      }
+
       final picker = ImagePicker();
-      final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+      final XFile? image = await picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1024,
+        maxHeight: 1024,
+        imageQuality: 85,
+      );
 
       if (image == null) return;
 
-      final storageService = ref.read(storageServiceProvider);
-      final socialService = ref.read(socialServiceProvider);
+      if (!context.mounted) return;
 
       // Yükleme başladı bildirimi
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Fotoğraf yükleniyor...')),
+      final loadingController = ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Row(
+            children: [
+              CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              ),
+              SizedBox(width: 16),
+              Text('Fotoğraf yükleniyor...'),
+            ],
+          ),
+          duration: Duration(seconds: 30),
+        ),
       );
+
+      final storageService = ref.read(storageServiceProvider);
+      final database = ref.read(databaseProvider);
 
       // Fotoğrafı Storage'a yükle
       final imageUrl = await storageService.uploadProfileImage(
@@ -330,16 +502,47 @@ class _ProfileHeaderWidgetState extends ConsumerState<ProfileHeaderWidget> {
         File(image.path),
       );
 
+      // Loading snackbar'ı kapat
+      loadingController.close();
+
       // Profili güncelle
-      await socialService.updateProfile(photoUrl: imageUrl);
+      await database.createUserProfile(
+        userId: widget.profile.id,
+        displayName: widget.profile.displayName,
+        username: widget.profile.username,
+        email: widget.profile.email,
+        photoURL: imageUrl,
+        bio: widget.profile.bio,
+      );
+
+      if (!context.mounted) return;
 
       // Başarılı bildirimi
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Profil fotoğrafı güncellendi')),
+        const SnackBar(
+          content: Row(
+            children: [
+              Icon(Icons.check_circle, color: Colors.white),
+              SizedBox(width: 16),
+              Text('Profil fotoğrafı güncellendi'),
+            ],
+          ),
+          backgroundColor: Colors.green,
+        ),
       );
     } catch (e) {
+      if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Hata: $e')),
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.error, color: Colors.white),
+              const SizedBox(width: 16),
+              Expanded(child: Text('Hata: $e')),
+            ],
+          ),
+          backgroundColor: Colors.red,
+        ),
       );
     }
   }
