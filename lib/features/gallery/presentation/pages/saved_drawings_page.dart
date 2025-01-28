@@ -1,29 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../domain/models/shared_drawing.dart';
+import '../../domain/services/drawing_service.dart';
 import '../widgets/shared_drawing_card.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 
 final savedDrawingsProvider =
-    StreamProvider.autoDispose<List<SharedDrawing>>((ref) {
-  final authState = ref.watch(authControllerProvider);
+    FutureProvider.autoDispose<List<SharedDrawing>>((ref) async {
+  final authState = ref.read(authControllerProvider);
   final userId = authState.maybeMap(
     authenticated: (state) => state.user.id,
-    orElse: () => null,
+    orElse: () => throw Exception('Giriş yapmanız gerekiyor'),
   );
 
-  if (userId == null) return Stream.value([]);
-
-  final firestore = FirebaseFirestore.instance;
-  return firestore
-      .collection('shared_drawings')
-      .where('savedBy', arrayContains: userId)
-      .orderBy('createdAt', descending: true)
-      .snapshots()
-      .map((snapshot) => snapshot.docs
-          .map((doc) => SharedDrawing.fromFirestore(doc.data(), doc.id))
-          .toList());
+  final drawingService = ref.read(drawingServiceProvider);
+  return drawingService.getSavedDrawings(userId);
 });
 
 class SavedDrawingsPage extends ConsumerWidget {
@@ -34,67 +25,53 @@ class SavedDrawingsPage extends ConsumerWidget {
     final savedDrawings = ref.watch(savedDrawingsProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF1A1A2E),
+      backgroundColor: const Color(0xFF0F3460),
       appBar: AppBar(
-        title: const Text('Kaydedilenler'),
-        backgroundColor: Colors.transparent,
+        title: const Text(
+          'Kaydedilen Çizimler',
+          style: TextStyle(color: Colors.white),
+        ),
+        backgroundColor: const Color(0xFF16213E),
         elevation: 0,
       ),
       body: savedDrawings.when(
         data: (drawings) {
           if (drawings.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.bookmark_border,
-                    size: 64,
-                    color: Colors.white.withOpacity(0.5),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Henüz kaydettiğin çizim yok',
-                    style: TextStyle(
-                      color: Colors.white.withOpacity(0.7),
-                      fontSize: 16,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Keşfet sayfasından beğendiğin çizimleri kaydedebilirsin',
-                    style: TextStyle(
-                      color: Colors.white.withOpacity(0.5),
-                      fontSize: 14,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
+            return const Center(
+              child: Text(
+                'Henüz kaydedilen çizim yok',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                ),
               ),
             );
           }
 
-          return GridView.builder(
+          return ListView.builder(
             padding: const EdgeInsets.all(16),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              childAspectRatio: 0.75,
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
-            ),
             itemCount: drawings.length,
             itemBuilder: (context, index) {
-              return SharedDrawingCard(drawing: drawings[index]);
+              final drawing = drawings[index];
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: SharedDrawingCard(drawing: drawing),
+              );
             },
           );
         },
         loading: () => const Center(
-          child: CircularProgressIndicator(),
+          child: CircularProgressIndicator(
+            color: Color(0xFF533483),
+          ),
         ),
         error: (error, stack) => Center(
           child: Text(
             'Hata: $error',
-            style: const TextStyle(color: Colors.white),
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+            ),
           ),
         ),
       ),

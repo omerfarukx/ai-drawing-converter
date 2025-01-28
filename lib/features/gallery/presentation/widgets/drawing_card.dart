@@ -69,13 +69,13 @@ class DrawingCard extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          drawing.displayName,
+                          drawing.userName,
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                         Text(
-                          drawing.userName,
+                          drawing.title,
                           style: Theme.of(context).textTheme.bodySmall,
                         ),
                       ],

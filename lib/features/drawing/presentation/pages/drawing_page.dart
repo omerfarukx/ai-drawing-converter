@@ -88,6 +88,7 @@ class _DrawingPageState extends ConsumerState<DrawingPage> {
                             title:
                                 "Yeni Çizim ${DateTime.now().day}/${DateTime.now().month}",
                             description: "Yapay zeka ile oluşturulmuş çizim",
+                            category: "AI Çizim",
                           );
 
                           if (mounted) {

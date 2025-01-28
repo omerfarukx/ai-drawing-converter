@@ -1,0 +1,42 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Oturum açmış kullanıcıları kontrol et
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Kullanıcının kendi dokümanı olup olmadığını kontrol et
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    // Herkesin erişebileceği koleksiyonlar
+    match /shared_drawings/{document=**} {
+      allow read: if true;  // Herkes okuyabilir
+      allow create, update: if isAuthenticated();
+      allow delete: if isAuthenticated() && request.auth.uid == resource.data.userId;
+    }
+
+    // Kullanıcı profili için kurallar
+    match /users/{userId} {
+      allow read: if true;  // Herkes okuyabilir
+      allow create: if isAuthenticated() && isOwner(userId);
+      allow update: if isAuthenticated() && isOwner(userId);
+      allow delete: if isAuthenticated() && isOwner(userId);
+
+      // Kullanıcının alt koleksiyonları için kurallar
+      match /{document=**} {
+        allow read: if true;
+        allow write: if isAuthenticated() && isOwner(userId);
+      }
+    }
+
+    // Diğer koleksiyonlar için varsayılan kurallar
+    match /{document=**} {
+      allow read: if true;
+      allow write: if isAuthenticated();
+    }
+  }
+} 

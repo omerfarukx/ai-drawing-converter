@@ -9,30 +9,41 @@ class DrawingService {
 
   // Çizimi beğen/beğenmekten vazgeç
   Future<void> toggleLike(String drawingId, String userId) async {
+    print(
+        'Debug: Beğeni işlemi başlatıldı - drawingId: $drawingId, userId: $userId');
+
     try {
+      // Referansları al
       final drawingRef =
           _firestore.collection('shared_drawings').doc(drawingId);
-      final doc = await drawingRef.get();
+      final likeRef = drawingRef.collection('likes').doc(userId);
 
-      if (!doc.exists) {
-        throw 'Çizim bulunamadı';
-      }
+      // Beğeni dokümanını kontrol et
+      final likeDoc = await likeRef.get();
 
-      final likes = List<String>.from(doc.data()?['likedBy'] ?? []);
-
-      if (likes.contains(userId)) {
+      if (likeDoc.exists) {
         // Beğeniyi kaldır
+        await likeRef.delete();
         await drawingRef.update({
-          'likedBy': FieldValue.arrayRemove([userId]),
+          'likesCount': FieldValue.increment(-1),
+          'lastInteractionAt': FieldValue.serverTimestamp(),
         });
+        print('Debug: Beğeni kaldırıldı');
       } else {
         // Beğeni ekle
-        await drawingRef.update({
-          'likedBy': FieldValue.arrayUnion([userId]),
+        await likeRef.set({
+          'userId': userId,
+          'createdAt': FieldValue.serverTimestamp(),
         });
+        await drawingRef.update({
+          'likesCount': FieldValue.increment(1),
+          'lastInteractionAt': FieldValue.serverTimestamp(),
+        });
+        print('Debug: Beğeni eklendi');
       }
     } catch (e) {
-      throw 'Beğeni işlemi başarısız oldu: $e';
+      print('Debug: Beğeni işlemi hatası: $e');
+      throw Exception('Beğeni işlemi başarısız oldu: $e');
     }
   }
 
@@ -41,27 +52,41 @@ class DrawingService {
     try {
       final drawingRef =
           _firestore.collection('shared_drawings').doc(drawingId);
-      final doc = await drawingRef.get();
+      final saveRef = drawingRef.collection('saves').doc(userId);
 
-      if (!doc.exists) {
-        throw 'Çizim bulunamadı';
+      // Önce mevcut dokümanı al
+      final drawingDoc = await drawingRef.get();
+      if (!drawingDoc.exists) {
+        throw Exception('Çizim bulunamadı');
       }
 
-      final saves = List<String>.from(doc.data()?['savedBy'] ?? []);
+      final currentSavesCount = drawingDoc.data()?['savesCount'] ?? 0;
+      final saveDoc = await saveRef.get();
 
-      if (saves.contains(userId)) {
+      if (saveDoc.exists) {
         // Kaydı kaldır
-        await drawingRef.update({
-          'savedBy': FieldValue.arrayRemove([userId]),
-        });
+        if (currentSavesCount > 0) {
+          // Sadece 0'dan büyükse azalt
+          await saveRef.delete();
+          await drawingRef.update({
+            'savesCount': FieldValue.increment(-1),
+            'lastInteractionAt': FieldValue.serverTimestamp(),
+          });
+        }
       } else {
         // Kaydet
+        await saveRef.set({
+          'userId': userId,
+          'createdAt': FieldValue.serverTimestamp(),
+        });
         await drawingRef.update({
-          'savedBy': FieldValue.arrayUnion([userId]),
+          'savesCount': FieldValue.increment(1),
+          'lastInteractionAt': FieldValue.serverTimestamp(),
         });
       }
     } catch (e) {
-      throw 'Kaydetme işlemi başarısız oldu: $e';
+      print('Debug: Kaydetme işlemi hatası: $e');
+      throw Exception('Kaydetme işlemi başarısız oldu: $e');
     }
   }
 
@@ -85,16 +110,37 @@ class DrawingService {
   // Kaydedilen çizimleri getir
   Future<List<SharedDrawing>> getSavedDrawings(String userId) async {
     try {
-      final querySnapshot = await _firestore
-          .collection('shared_drawings')
-          .where('savedBy', arrayContains: userId)
-          .orderBy('createdAt', descending: true)
-          .get();
+      print('Debug: getSavedDrawings - Kaydedilen çizimler getiriliyor...');
 
-      return querySnapshot.docs
-          .map((doc) => SharedDrawing.fromFirestore(doc.data(), doc.id))
+      // Tüm çizimleri getir ve client-side filtreleme yap
+      final querySnapshot =
+          await _firestore.collection('shared_drawings').get();
+
+      final drawings = await Future.wait(
+        querySnapshot.docs.map((doc) async {
+          // Her çizim için saves koleksiyonunu kontrol et
+          final saveDoc = await _firestore
+              .collection('shared_drawings')
+              .doc(doc.id)
+              .collection('saves')
+              .doc(userId)
+              .get();
+
+          // Eğer kullanıcı kaydetmişse, çizimi döndür
+          if (saveDoc.exists) {
+            return SharedDrawing.fromFirestore(doc.data(), doc.id);
+          }
+          return null;
+        }),
+      );
+
+      // null olmayan çizimleri filtrele ve döndür
+      return drawings
+          .where((drawing) => drawing != null)
+          .cast<SharedDrawing>()
           .toList();
     } catch (e) {
+      print('Debug: getSavedDrawings - HATA: $e');
       throw 'Kaydedilen çizimler getirilemedi: $e';
     }
   }

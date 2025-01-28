@@ -23,18 +23,17 @@ mixin _$SharedDrawing {
   String get id => throw _privateConstructorUsedError;
   String get userId => throw _privateConstructorUsedError;
   String get userName => throw _privateConstructorUsedError;
-  String get displayName => throw _privateConstructorUsedError;
   String? get userPhotoURL => throw _privateConstructorUsedError;
   String get imageUrl => throw _privateConstructorUsedError;
   String get title => throw _privateConstructorUsedError;
-  String? get description => throw _privateConstructorUsedError;
+  String get description => throw _privateConstructorUsedError;
+  String get category => throw _privateConstructorUsedError;
   int get likesCount => throw _privateConstructorUsedError;
   int get savesCount => throw _privateConstructorUsedError;
   int get commentsCount => throw _privateConstructorUsedError;
   bool get isLiked => throw _privateConstructorUsedError;
   bool get isSaved => throw _privateConstructorUsedError;
   DateTime get createdAt => throw _privateConstructorUsedError;
-  DateTime get updatedAt => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
@@ -52,18 +51,17 @@ abstract class $SharedDrawingCopyWith<$Res> {
       {String id,
       String userId,
       String userName,
-      String displayName,
       String? userPhotoURL,
       String imageUrl,
       String title,
-      String? description,
+      String description,
+      String category,
       int likesCount,
       int savesCount,
       int commentsCount,
       bool isLiked,
       bool isSaved,
-      DateTime createdAt,
-      DateTime updatedAt});
+      DateTime createdAt});
 }
 
 /// @nodoc
@@ -82,18 +80,17 @@ class _$SharedDrawingCopyWithImpl<$Res, $Val extends SharedDrawing>
     Object? id = null,
     Object? userId = null,
     Object? userName = null,
-    Object? displayName = null,
     Object? userPhotoURL = freezed,
     Object? imageUrl = null,
     Object? title = null,
-    Object? description = freezed,
+    Object? description = null,
+    Object? category = null,
     Object? likesCount = null,
     Object? savesCount = null,
     Object? commentsCount = null,
     Object? isLiked = null,
     Object? isSaved = null,
     Object? createdAt = null,
-    Object? updatedAt = null,
   }) {
     return _then(_value.copyWith(
       id: null == id
@@ -108,10 +105,6 @@ class _$SharedDrawingCopyWithImpl<$Res, $Val extends SharedDrawing>
           ? _value.userName
           : userName // ignore: cast_nullable_to_non_nullable
               as String,
-      displayName: null == displayName
-          ? _value.displayName
-          : displayName // ignore: cast_nullable_to_non_nullable
-              as String,
       userPhotoURL: freezed == userPhotoURL
           ? _value.userPhotoURL
           : userPhotoURL // ignore: cast_nullable_to_non_nullable
@@ -124,10 +117,14 @@ class _$SharedDrawingCopyWithImpl<$Res, $Val extends SharedDrawing>
           ? _value.title
           : title // ignore: cast_nullable_to_non_nullable
               as String,
-      description: freezed == description
+      description: null == description
           ? _value.description
           : description // ignore: cast_nullable_to_non_nullable
-              as String?,
+              as String,
+      category: null == category
+          ? _value.category
+          : category // ignore: cast_nullable_to_non_nullable
+              as String,
       likesCount: null == likesCount
           ? _value.likesCount
           : likesCount // ignore: cast_nullable_to_non_nullable
@@ -151,10 +148,6 @@ class _$SharedDrawingCopyWithImpl<$Res, $Val extends SharedDrawing>
       createdAt: null == createdAt
           ? _value.createdAt
           : createdAt // ignore: cast_nullable_to_non_nullable
-              as DateTime,
-      updatedAt: null == updatedAt
-          ? _value.updatedAt
-          : updatedAt // ignore: cast_nullable_to_non_nullable
               as DateTime,
     ) as $Val);
   }
@@ -172,18 +165,17 @@ abstract class _$$SharedDrawingImplCopyWith<$Res>
       {String id,
       String userId,
       String userName,
-      String displayName,
       String? userPhotoURL,
       String imageUrl,
       String title,
-      String? description,
+      String description,
+      String category,
       int likesCount,
       int savesCount,
       int commentsCount,
       bool isLiked,
       bool isSaved,
-      DateTime createdAt,
-      DateTime updatedAt});
+      DateTime createdAt});
 }
 
 /// @nodoc
@@ -200,18 +192,17 @@ class __$$SharedDrawingImplCopyWithImpl<$Res>
     Object? id = null,
     Object? userId = null,
     Object? userName = null,
-    Object? displayName = null,
     Object? userPhotoURL = freezed,
     Object? imageUrl = null,
     Object? title = null,
-    Object? description = freezed,
+    Object? description = null,
+    Object? category = null,
     Object? likesCount = null,
     Object? savesCount = null,
     Object? commentsCount = null,
     Object? isLiked = null,
     Object? isSaved = null,
     Object? createdAt = null,
-    Object? updatedAt = null,
   }) {
     return _then(_$SharedDrawingImpl(
       id: null == id
@@ -226,10 +217,6 @@ class __$$SharedDrawingImplCopyWithImpl<$Res>
           ? _value.userName
           : userName // ignore: cast_nullable_to_non_nullable
               as String,
-      displayName: null == displayName
-          ? _value.displayName
-          : displayName // ignore: cast_nullable_to_non_nullable
-              as String,
       userPhotoURL: freezed == userPhotoURL
           ? _value.userPhotoURL
           : userPhotoURL // ignore: cast_nullable_to_non_nullable
@@ -242,10 +229,14 @@ class __$$SharedDrawingImplCopyWithImpl<$Res>
           ? _value.title
           : title // ignore: cast_nullable_to_non_nullable
               as String,
-      description: freezed == description
+      description: null == description
           ? _value.description
           : description // ignore: cast_nullable_to_non_nullable
-              as String?,
+              as String,
+      category: null == category
+          ? _value.category
+          : category // ignore: cast_nullable_to_non_nullable
+              as String,
       likesCount: null == likesCount
           ? _value.likesCount
           : likesCount // ignore: cast_nullable_to_non_nullable
@@ -270,10 +261,6 @@ class __$$SharedDrawingImplCopyWithImpl<$Res>
           ? _value.createdAt
           : createdAt // ignore: cast_nullable_to_non_nullable
               as DateTime,
-      updatedAt: null == updatedAt
-          ? _value.updatedAt
-          : updatedAt // ignore: cast_nullable_to_non_nullable
-              as DateTime,
     ));
   }
 }
@@ -285,18 +272,17 @@ class _$SharedDrawingImpl extends _SharedDrawing {
       {required this.id,
       required this.userId,
       required this.userName,
-      required this.displayName,
       this.userPhotoURL,
       required this.imageUrl,
       required this.title,
-      this.description,
+      required this.description,
+      required this.category,
       this.likesCount = 0,
       this.savesCount = 0,
       this.commentsCount = 0,
       this.isLiked = false,
       this.isSaved = false,
-      required this.createdAt,
-      required this.updatedAt})
+      required this.createdAt})
       : super._();
 
   factory _$SharedDrawingImpl.fromJson(Map<String, dynamic> json) =>
@@ -309,15 +295,15 @@ class _$SharedDrawingImpl extends _SharedDrawing {
   @override
   final String userName;
   @override
-  final String displayName;
-  @override
   final String? userPhotoURL;
   @override
   final String imageUrl;
   @override
   final String title;
   @override
-  final String? description;
+  final String description;
+  @override
+  final String category;
   @override
   @JsonKey()
   final int likesCount;
@@ -335,12 +321,10 @@ class _$SharedDrawingImpl extends _SharedDrawing {
   final bool isSaved;
   @override
   final DateTime createdAt;
-  @override
-  final DateTime updatedAt;
 
   @override
   String toString() {
-    return 'SharedDrawing(id: $id, userId: $userId, userName: $userName, displayName: $displayName, userPhotoURL: $userPhotoURL, imageUrl: $imageUrl, title: $title, description: $description, likesCount: $likesCount, savesCount: $savesCount, commentsCount: $commentsCount, isLiked: $isLiked, isSaved: $isSaved, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'SharedDrawing(id: $id, userId: $userId, userName: $userName, userPhotoURL: $userPhotoURL, imageUrl: $imageUrl, title: $title, description: $description, category: $category, likesCount: $likesCount, savesCount: $savesCount, commentsCount: $commentsCount, isLiked: $isLiked, isSaved: $isSaved, createdAt: $createdAt)';
   }
 
   @override
@@ -352,8 +336,6 @@ class _$SharedDrawingImpl extends _SharedDrawing {
             (identical(other.userId, userId) || other.userId == userId) &&
             (identical(other.userName, userName) ||
                 other.userName == userName) &&
-            (identical(other.displayName, displayName) ||
-                other.displayName == displayName) &&
             (identical(other.userPhotoURL, userPhotoURL) ||
                 other.userPhotoURL == userPhotoURL) &&
             (identical(other.imageUrl, imageUrl) ||
@@ -361,6 +343,8 @@ class _$SharedDrawingImpl extends _SharedDrawing {
             (identical(other.title, title) || other.title == title) &&
             (identical(other.description, description) ||
                 other.description == description) &&
+            (identical(other.category, category) ||
+                other.category == category) &&
             (identical(other.likesCount, likesCount) ||
                 other.likesCount == likesCount) &&
             (identical(other.savesCount, savesCount) ||
@@ -370,9 +354,7 @@ class _$SharedDrawingImpl extends _SharedDrawing {
             (identical(other.isLiked, isLiked) || other.isLiked == isLiked) &&
             (identical(other.isSaved, isSaved) || other.isSaved == isSaved) &&
             (identical(other.createdAt, createdAt) ||
-                other.createdAt == createdAt) &&
-            (identical(other.updatedAt, updatedAt) ||
-                other.updatedAt == updatedAt));
+                other.createdAt == createdAt));
   }
 
   @JsonKey(ignore: true)
@@ -382,18 +364,17 @@ class _$SharedDrawingImpl extends _SharedDrawing {
       id,
       userId,
       userName,
-      displayName,
       userPhotoURL,
       imageUrl,
       title,
       description,
+      category,
       likesCount,
       savesCount,
       commentsCount,
       isLiked,
       isSaved,
-      createdAt,
-      updatedAt);
+      createdAt);
 
   @JsonKey(ignore: true)
   @override
@@ -414,18 +395,17 @@ abstract class _SharedDrawing extends SharedDrawing {
       {required final String id,
       required final String userId,
       required final String userName,
-      required final String displayName,
       final String? userPhotoURL,
       required final String imageUrl,
       required final String title,
-      final String? description,
+      required final String description,
+      required final String category,
       final int likesCount,
       final int savesCount,
       final int commentsCount,
       final bool isLiked,
       final bool isSaved,
-      required final DateTime createdAt,
-      required final DateTime updatedAt}) = _$SharedDrawingImpl;
+      required final DateTime createdAt}) = _$SharedDrawingImpl;
   const _SharedDrawing._() : super._();
 
   factory _SharedDrawing.fromJson(Map<String, dynamic> json) =
@@ -438,15 +418,15 @@ abstract class _SharedDrawing extends SharedDrawing {
   @override
   String get userName;
   @override
-  String get displayName;
-  @override
   String? get userPhotoURL;
   @override
   String get imageUrl;
   @override
   String get title;
   @override
-  String? get description;
+  String get description;
+  @override
+  String get category;
   @override
   int get likesCount;
   @override
@@ -459,8 +439,6 @@ abstract class _SharedDrawing extends SharedDrawing {
   bool get isSaved;
   @override
   DateTime get createdAt;
-  @override
-  DateTime get updatedAt;
   @override
   @JsonKey(ignore: true)
   _$$SharedDrawingImplCopyWith<_$SharedDrawingImpl> get copyWith =>

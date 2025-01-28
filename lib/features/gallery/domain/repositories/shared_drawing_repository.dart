@@ -47,6 +47,7 @@ class SharedDrawingRepository {
     required String imageUrl,
     required String title,
     String? description,
+    String? category,
     bool isPublic = true,
   }) async {
     try {
@@ -54,17 +55,16 @@ class SharedDrawingRepository {
       final data = {
         'userId': userId,
         'userName': userName,
-        'displayName': userName,
         'userProfileImage': userProfileImage,
         'imageUrl': imageUrl,
         'title': title,
-        'description': description,
+        'description': description ?? '',
+        'category': category ?? 'Diğer',
         'likes': 0,
         'comments': 0,
         'saves': 0,
         'isPublic': isPublic,
         'createdAt': now,
-        'updatedAt': now,
       };
 
       // Dökümanı oluştur
@@ -75,18 +75,17 @@ class SharedDrawingRepository {
         id: docRef.id,
         userId: userId,
         userName: userName,
-        displayName: userName,
         userPhotoURL: userProfileImage,
         imageUrl: imageUrl,
         title: title,
-        description: description,
+        description: description ?? '',
+        category: category ?? 'Diğer',
+        createdAt: DateTime.now(),
         likesCount: 0,
         savesCount: 0,
         commentsCount: 0,
         isLiked: false,
         isSaved: false,
-        createdAt: now,
-        updatedAt: now,
       );
     } catch (e) {
       print('Çizim paylaşma hatası: $e');

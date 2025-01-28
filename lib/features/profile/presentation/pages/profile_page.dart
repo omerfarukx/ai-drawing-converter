@@ -20,7 +20,7 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/domain/models/auth_state.dart';
 import '../../../auth/domain/models/user.dart';
 import '../../../auth/presentation/pages/login_page.dart';
-import '../../../drawing/presentation/pages/saved_drawings_page.dart';
+import '../../../gallery/presentation/pages/saved_drawings_page.dart';
 import '../providers/user_profile_stream_provider.dart';
 import '../../../../core/widgets/error_widget.dart';
 import '../../../../core/widgets/loading_widget.dart';
