@@ -267,6 +267,22 @@ class SharedDrawingCard extends ConsumerWidget {
                                 fontSize: 12,
                               ),
                             ),
+                            // Kullanıcının kendi paylaşımıysa silme butonu göster
+                            if (updatedDrawing.userId ==
+                                ref.read(authControllerProvider).maybeMap(
+                                      authenticated: (state) => state.user.id,
+                                      orElse: () => null,
+                                    )) ...[
+                              const SizedBox(width: 16),
+                              GestureDetector(
+                                onTap: () => _handleDelete(context, ref),
+                                child: Icon(
+                                  Icons.delete_outline,
+                                  color: Colors.red.withOpacity(0.7),
+                                  size: 24,
+                                ),
+                              ),
+                            ],
                           ],
                         ),
                       ],
@@ -423,5 +439,61 @@ class SharedDrawingCard extends ConsumerWidget {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Yorum özelliği yakında eklenecek')),
     );
+  }
+
+  // Silme işlemi için yeni fonksiyon ekle
+  void _handleDelete(BuildContext context, WidgetRef ref) async {
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF16213E),
+        title: const Text(
+          'Çizimi Sil',
+          style: TextStyle(color: Colors.white),
+        ),
+        content: const Text(
+          'Bu çizimi silmek istediğinize emin misiniz?',
+          style: TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(
+              'İptal',
+              style: TextStyle(color: Colors.white.withOpacity(0.7)),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text(
+              'Sil',
+              style: TextStyle(color: Colors.red),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldDelete == true && context.mounted) {
+      try {
+        final drawingService = ref.read(drawingServiceProvider);
+        await drawingService.deleteSharedDrawing(drawing.id);
+
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Çizim başarıyla silindi')),
+          );
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Çizim silinirken bir hata oluştu: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
   }
 }

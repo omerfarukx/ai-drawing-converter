@@ -141,8 +141,27 @@ class SharedDrawingRepositoryImpl implements SharedDrawingRepository {
   }) async {
     try {
       final now = DateTime.now();
-      final drawing = SharedDrawing(
-        id: '',
+      final drawingData = {
+        'userId': userId,
+        'userName': userName,
+        'userPhotoURL': userProfileImage,
+        'imageUrl': imageUrl,
+        'title': title,
+        'description': description ?? '',
+        'category': category ?? 'Diğer',
+        'isPublic': isPublic,
+        'createdAt': now,
+        'likesCount': 0,
+        'savesCount': 0,
+        'commentsCount': 0,
+        'likes': [],
+        'saves': [],
+      };
+
+      final docRef = await _firestore.collection(_collection).add(drawingData);
+
+      return SharedDrawing(
+        id: docRef.id,
         userId: userId,
         userName: userName,
         userPhotoURL: userProfileImage,
@@ -152,12 +171,12 @@ class SharedDrawingRepositoryImpl implements SharedDrawingRepository {
         category: category ?? 'Diğer',
         isPublic: isPublic,
         createdAt: now,
+        likesCount: 0,
+        savesCount: 0,
+        commentsCount: 0,
+        isLiked: false,
+        isSaved: false,
       );
-
-      final docRef =
-          await _firestore.collection(_collection).add(drawing.toFirestore());
-
-      return drawing.copyWith(id: docRef.id);
     } catch (e) {
       print('Çizim paylaşma hatası: $e');
       throw Exception(

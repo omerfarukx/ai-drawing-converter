@@ -49,45 +49,14 @@ class DrawingService {
 
   // Çizimi kaydet/kaydetmekten vazgeç
   Future<void> toggleSave(String drawingId, String userId) async {
-    try {
-      final drawingRef =
-          _firestore.collection('shared_drawings').doc(drawingId);
-      final saveRef = drawingRef.collection('saves').doc(userId);
+    await _firestore.collection('shared_drawings').doc(drawingId).update({
+      'savesCount': FieldValue.increment(1),
+      'lastInteractionAt': FieldValue.serverTimestamp(),
+    });
+  }
 
-      // Önce mevcut dokümanı al
-      final drawingDoc = await drawingRef.get();
-      if (!drawingDoc.exists) {
-        throw Exception('Çizim bulunamadı');
-      }
-
-      final currentSavesCount = drawingDoc.data()?['savesCount'] ?? 0;
-      final saveDoc = await saveRef.get();
-
-      if (saveDoc.exists) {
-        // Kaydı kaldır
-        if (currentSavesCount > 0) {
-          // Sadece 0'dan büyükse azalt
-          await saveRef.delete();
-          await drawingRef.update({
-            'savesCount': FieldValue.increment(-1),
-            'lastInteractionAt': FieldValue.serverTimestamp(),
-          });
-        }
-      } else {
-        // Kaydet
-        await saveRef.set({
-          'userId': userId,
-          'createdAt': FieldValue.serverTimestamp(),
-        });
-        await drawingRef.update({
-          'savesCount': FieldValue.increment(1),
-          'lastInteractionAt': FieldValue.serverTimestamp(),
-        });
-      }
-    } catch (e) {
-      print('Debug: Kaydetme işlemi hatası: $e');
-      throw Exception('Kaydetme işlemi başarısız oldu: $e');
-    }
+  Future<void> deleteSharedDrawing(String drawingId) async {
+    await _firestore.collection('shared_drawings').doc(drawingId).delete();
   }
 
   // Beğenilen çizimleri getir

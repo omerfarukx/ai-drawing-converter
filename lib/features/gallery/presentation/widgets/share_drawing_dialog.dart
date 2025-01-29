@@ -66,6 +66,10 @@ class _ShareDrawingDialogState extends ConsumerState<ShareDrawingDialog> {
         return;
       }
 
+      // Kullanıcı bilgilerini kontrol et
+      final userName = user.displayName ?? 'Anonim';
+      final userPhotoURL = user.photoURL;
+
       // Dosya yolunu kontrol et
       final file = File(widget.drawing.path);
       if (!await file.exists()) {
@@ -86,8 +90,8 @@ class _ShareDrawingDialogState extends ConsumerState<ShareDrawingDialog> {
       // Çizimi paylaş
       await ref.read(shareDrawingProvider.notifier).shareDrawing(
             userId: user.uid,
-            userName: user.displayName ?? 'Anonim',
-            userProfileImage: user.photoURL ?? '',
+            userName: userName,
+            userProfileImage: userPhotoURL ?? '',
             imageUrl: imageUrl,
             title: _titleController.text.trim(),
             description: _descriptionController.text.trim(),
