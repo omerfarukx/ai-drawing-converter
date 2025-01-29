@@ -21,6 +21,7 @@ _$SharedDrawingImpl _$$SharedDrawingImplFromJson(Map<String, dynamic> json) =>
       commentsCount: (json['commentsCount'] as num?)?.toInt() ?? 0,
       isLiked: json['isLiked'] as bool? ?? false,
       isSaved: json['isSaved'] as bool? ?? false,
+      isPublic: json['isPublic'] as bool? ?? true,
       createdAt: DateTime.parse(json['createdAt'] as String),
     );
 
@@ -39,5 +40,6 @@ Map<String, dynamic> _$$SharedDrawingImplToJson(_$SharedDrawingImpl instance) =>
       'commentsCount': instance.commentsCount,
       'isLiked': instance.isLiked,
       'isSaved': instance.isSaved,
+      'isPublic': instance.isPublic,
       'createdAt': instance.createdAt.toIso8601String(),
     };

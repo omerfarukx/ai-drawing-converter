@@ -1,11 +1,15 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/shared_drawing.dart';
+import 'package:yapayzeka_cizim/features/gallery/domain/models/comment.dart';
+import 'package:yapayzeka_cizim/features/gallery/data/repositories/shared_drawing_repository_impl.dart';
 
 final sharedDrawingRepositoryProvider =
-    Provider((ref) => SharedDrawingRepository());
+    Provider<SharedDrawingRepository>((ref) {
+  return SharedDrawingRepositoryImpl();
+});
 
-class SharedDrawingRepository {
+abstract class SharedDrawingRepository {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final String _collection = 'shared_drawings';
 
@@ -40,61 +44,6 @@ class SharedDrawingRepository {
   }
 
   // Çizim paylaş
-  Future<SharedDrawing> shareDrawing({
-    required String userId,
-    required String userName,
-    required String userProfileImage,
-    required String imageUrl,
-    required String title,
-    String? description,
-    String? category,
-    bool isPublic = true,
-  }) async {
-    try {
-      final now = DateTime.now();
-      final data = {
-        'userId': userId,
-        'userName': userName,
-        'userProfileImage': userProfileImage,
-        'imageUrl': imageUrl,
-        'title': title,
-        'description': description ?? '',
-        'category': category ?? 'Diğer',
-        'likes': 0,
-        'comments': 0,
-        'saves': 0,
-        'isPublic': isPublic,
-        'createdAt': now,
-      };
-
-      // Dökümanı oluştur
-      final docRef = await _firestore.collection(_collection).add(data);
-
-      // SharedDrawing nesnesini oluştur ve dön
-      return SharedDrawing(
-        id: docRef.id,
-        userId: userId,
-        userName: userName,
-        userPhotoURL: userProfileImage,
-        imageUrl: imageUrl,
-        title: title,
-        description: description ?? '',
-        category: category ?? 'Diğer',
-        createdAt: DateTime.now(),
-        likesCount: 0,
-        savesCount: 0,
-        commentsCount: 0,
-        isLiked: false,
-        isSaved: false,
-      );
-    } catch (e) {
-      print('Çizim paylaşma hatası: $e');
-      throw Exception(
-          'Çizim paylaşılırken bir hata oluştu. Lütfen tekrar deneyin.');
-    }
-  }
-
-  // Paylaşılan çizimleri getir
   Future<List<SharedDrawing>> getSharedDrawings({
     int limit = 20,
     String? startAfterId,
@@ -159,4 +108,34 @@ class SharedDrawingRepository {
       throw 'Paylaşım silinirken hata oluştu: $e';
     }
   }
+
+  Future<void> addComment({
+    required String drawingId,
+    required String text,
+    required String userId,
+    required String userName,
+    String? userPhotoURL,
+  });
+
+  Stream<List<Comment>> getComments(String drawingId);
+
+  Future<SharedDrawing> shareDrawing({
+    required String userId,
+    required String userName,
+    required String userProfileImage,
+    required String imageUrl,
+    required String title,
+    String? description,
+    String? category,
+    bool isPublic = true,
+  });
+
+  Future<void> addSharedDrawing(SharedDrawing drawing);
+  Future<void> updateSharedDrawing(SharedDrawing drawing);
+  Future<void> deleteComment(
+      {required String drawingId, required String commentId});
+  Future<void> toggleLike({
+    required String drawingId,
+    required String userId,
+  });
 }

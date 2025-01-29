@@ -18,6 +18,7 @@ import 'features/profile/presentation/pages/profile_page.dart';
 import 'features/auth/presentation/pages/login_page.dart';
 import 'features/auth/domain/models/auth_state.dart';
 import 'core/services/user_service.dart';
+import 'package:timeago/timeago.dart' as timeago;
 
 void main() async {
   try {
@@ -47,6 +48,9 @@ void main() async {
     } catch (e) {
       print('AdService başlatma hatası: $e');
     }
+
+    timeago.setLocaleMessages('tr', timeago.TrMessages());
+    timeago.setDefaultLocale('tr');
 
     runApp(
       const ProviderScope(

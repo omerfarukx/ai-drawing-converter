@@ -33,6 +33,7 @@ mixin _$SharedDrawing {
   int get commentsCount => throw _privateConstructorUsedError;
   bool get isLiked => throw _privateConstructorUsedError;
   bool get isSaved => throw _privateConstructorUsedError;
+  bool get isPublic => throw _privateConstructorUsedError;
   DateTime get createdAt => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -61,6 +62,7 @@ abstract class $SharedDrawingCopyWith<$Res> {
       int commentsCount,
       bool isLiked,
       bool isSaved,
+      bool isPublic,
       DateTime createdAt});
 }
 
@@ -90,6 +92,7 @@ class _$SharedDrawingCopyWithImpl<$Res, $Val extends SharedDrawing>
     Object? commentsCount = null,
     Object? isLiked = null,
     Object? isSaved = null,
+    Object? isPublic = null,
     Object? createdAt = null,
   }) {
     return _then(_value.copyWith(
@@ -145,6 +148,10 @@ class _$SharedDrawingCopyWithImpl<$Res, $Val extends SharedDrawing>
           ? _value.isSaved
           : isSaved // ignore: cast_nullable_to_non_nullable
               as bool,
+      isPublic: null == isPublic
+          ? _value.isPublic
+          : isPublic // ignore: cast_nullable_to_non_nullable
+              as bool,
       createdAt: null == createdAt
           ? _value.createdAt
           : createdAt // ignore: cast_nullable_to_non_nullable
@@ -175,6 +182,7 @@ abstract class _$$SharedDrawingImplCopyWith<$Res>
       int commentsCount,
       bool isLiked,
       bool isSaved,
+      bool isPublic,
       DateTime createdAt});
 }
 
@@ -202,6 +210,7 @@ class __$$SharedDrawingImplCopyWithImpl<$Res>
     Object? commentsCount = null,
     Object? isLiked = null,
     Object? isSaved = null,
+    Object? isPublic = null,
     Object? createdAt = null,
   }) {
     return _then(_$SharedDrawingImpl(
@@ -257,6 +266,10 @@ class __$$SharedDrawingImplCopyWithImpl<$Res>
           ? _value.isSaved
           : isSaved // ignore: cast_nullable_to_non_nullable
               as bool,
+      isPublic: null == isPublic
+          ? _value.isPublic
+          : isPublic // ignore: cast_nullable_to_non_nullable
+              as bool,
       createdAt: null == createdAt
           ? _value.createdAt
           : createdAt // ignore: cast_nullable_to_non_nullable
@@ -282,6 +295,7 @@ class _$SharedDrawingImpl extends _SharedDrawing {
       this.commentsCount = 0,
       this.isLiked = false,
       this.isSaved = false,
+      this.isPublic = true,
       required this.createdAt})
       : super._();
 
@@ -320,11 +334,14 @@ class _$SharedDrawingImpl extends _SharedDrawing {
   @JsonKey()
   final bool isSaved;
   @override
+  @JsonKey()
+  final bool isPublic;
+  @override
   final DateTime createdAt;
 
   @override
   String toString() {
-    return 'SharedDrawing(id: $id, userId: $userId, userName: $userName, userPhotoURL: $userPhotoURL, imageUrl: $imageUrl, title: $title, description: $description, category: $category, likesCount: $likesCount, savesCount: $savesCount, commentsCount: $commentsCount, isLiked: $isLiked, isSaved: $isSaved, createdAt: $createdAt)';
+    return 'SharedDrawing(id: $id, userId: $userId, userName: $userName, userPhotoURL: $userPhotoURL, imageUrl: $imageUrl, title: $title, description: $description, category: $category, likesCount: $likesCount, savesCount: $savesCount, commentsCount: $commentsCount, isLiked: $isLiked, isSaved: $isSaved, isPublic: $isPublic, createdAt: $createdAt)';
   }
 
   @override
@@ -353,6 +370,8 @@ class _$SharedDrawingImpl extends _SharedDrawing {
                 other.commentsCount == commentsCount) &&
             (identical(other.isLiked, isLiked) || other.isLiked == isLiked) &&
             (identical(other.isSaved, isSaved) || other.isSaved == isSaved) &&
+            (identical(other.isPublic, isPublic) ||
+                other.isPublic == isPublic) &&
             (identical(other.createdAt, createdAt) ||
                 other.createdAt == createdAt));
   }
@@ -374,6 +393,7 @@ class _$SharedDrawingImpl extends _SharedDrawing {
       commentsCount,
       isLiked,
       isSaved,
+      isPublic,
       createdAt);
 
   @JsonKey(ignore: true)
@@ -405,6 +425,7 @@ abstract class _SharedDrawing extends SharedDrawing {
       final int commentsCount,
       final bool isLiked,
       final bool isSaved,
+      final bool isPublic,
       required final DateTime createdAt}) = _$SharedDrawingImpl;
   const _SharedDrawing._() : super._();
 
@@ -437,6 +458,8 @@ abstract class _SharedDrawing extends SharedDrawing {
   bool get isLiked;
   @override
   bool get isSaved;
+  @override
+  bool get isPublic;
   @override
   DateTime get createdAt;
   @override

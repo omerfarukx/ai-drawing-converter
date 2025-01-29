@@ -20,6 +20,7 @@ class SharedDrawing with _$SharedDrawing {
     @Default(0) int commentsCount,
     @Default(false) bool isLiked,
     @Default(false) bool isSaved,
+    @Default(true) bool isPublic,
     required DateTime createdAt,
   }) = _SharedDrawing;
 
@@ -29,9 +30,6 @@ class SharedDrawing with _$SharedDrawing {
       _$SharedDrawingFromJson(json);
 
   factory SharedDrawing.fromFirestore(Map<String, dynamic> data, String id) {
-    print('Debug: SharedDrawing oluşturuluyor - id: $id');
-    print('Debug: Gelen veri - $data');
-
     return SharedDrawing(
       id: id,
       userId: data['userId'] as String? ?? '',
@@ -46,6 +44,7 @@ class SharedDrawing with _$SharedDrawing {
       commentsCount: (data['commentsCount'] as num?)?.toInt() ?? 0,
       isLiked: data['isLiked'] as bool? ?? false,
       isSaved: data['isSaved'] as bool? ?? false,
+      isPublic: data['isPublic'] as bool? ?? true,
       createdAt: data['createdAt'] != null
           ? (data['createdAt'] as Timestamp).toDate()
           : DateTime.now(),
@@ -61,10 +60,11 @@ class SharedDrawing with _$SharedDrawing {
       'title': title,
       'description': description,
       'category': category,
+      'likesCount': likesCount,
+      'savesCount': savesCount,
+      'commentsCount': commentsCount,
+      'isPublic': isPublic,
       'createdAt': Timestamp.fromDate(createdAt),
-      'isPublic': true,
-      'updatedAt': Timestamp.fromDate(createdAt),
-      'lastInteractionAt': Timestamp.fromDate(createdAt),
     };
   }
 }
