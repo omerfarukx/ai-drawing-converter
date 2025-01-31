@@ -20,9 +20,9 @@ class UserProfile with _$UserProfile {
   const factory UserProfile({
     required String id,
     required String username,
-    required String displayName,
+    @Default('Yeni Kullanıcı') String displayName,
     @JsonKey(name: 'photoURL') String? photoUrl,
-    String? bio,
+    @Default('Merhaba! Ben yeni bir kullanıcıyım.') String bio,
     @Default(0) int drawingsCount,
     @Default(0) int followersCount,
     @Default(0) int followingCount,
@@ -52,8 +52,6 @@ class UserProfile with _$UserProfile {
       UserProfile(
         id: id,
         username: username,
-        displayName: 'Yeni Kullanıcı',
-        bio: 'Merhaba! Ben yeni bir kullanıcıyım.',
         createdAt: DateTime.now(),
         lastLoginAt: DateTime.now(),
       );
@@ -63,19 +61,23 @@ class UserProfile with _$UserProfile {
     final data = doc.data() as Map<String, dynamic>;
     final followers = List<String>.from(data['followers'] ?? []);
     final following = List<String>.from(data['following'] ?? []);
-    final savedDrawings = List<String>.from(data['savedDrawings'] ?? []);
 
     return UserProfile(
       id: doc.id,
-      username: data['username'] as String,
-      displayName: data['displayName'] as String,
+      username: data['username'] as String? ?? 'user_${doc.id.substring(0, 8)}',
+      displayName: data['displayName'] as String? ?? 'Yeni Kullanıcı',
       photoUrl: data['photoUrl'] as String?,
-      bio: data['bio'] as String?,
+      bio: data['bio'] as String? ?? 'Merhaba! Ben yeni bir kullanıcıyım.',
       drawingsCount: (data['drawingsCount'] as num?)?.toInt() ?? 0,
-      followersCount: followers.length,
-      followingCount: following.length,
-      savedDrawingsCount: savedDrawings.length,
-      isFollowing: currentUserId != null && followers.contains(currentUserId),
+      followersCount: (data['followersCount'] as num?)?.toInt() ?? 0,
+      followingCount: (data['followingCount'] as num?)?.toInt() ?? 0,
+      savedDrawingsCount: (data['savedDrawingsCount'] as num?)?.toInt() ?? 0,
+      isFollowing:
+          currentUserId != null ? following.contains(currentUserId) : false,
+      followers: followers,
+      following: following,
+      createdAt: _dateTimeFromTimestamp(data['createdAt']),
+      lastLoginAt: _dateTimeFromTimestamp(data['lastLoginAt']),
     );
   }
 }

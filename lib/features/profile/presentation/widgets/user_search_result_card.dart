@@ -71,16 +71,14 @@ class UserSearchResultCard extends StatelessWidget {
                           fontWeight: FontWeight.w600,
                         ),
                       ),
-                      if (user.displayName != null) ...[
-                        const SizedBox(height: 4),
-                        Text(
-                          user.displayName,
-                          style: TextStyle(
-                            color: Colors.white.withOpacity(0.7),
-                            fontSize: 14,
-                          ),
+                      const SizedBox(height: 4),
+                      Text(
+                        user.displayName,
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.7),
+                          fontSize: 14,
                         ),
-                      ],
+                      ),
                     ],
                   ),
                 ),

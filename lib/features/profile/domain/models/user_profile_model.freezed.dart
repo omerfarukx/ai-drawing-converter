@@ -25,7 +25,7 @@ mixin _$UserProfile {
   String get displayName => throw _privateConstructorUsedError;
   @JsonKey(name: 'photoURL')
   String? get photoUrl => throw _privateConstructorUsedError;
-  String? get bio => throw _privateConstructorUsedError;
+  String get bio => throw _privateConstructorUsedError;
   int get drawingsCount => throw _privateConstructorUsedError;
   int get followersCount => throw _privateConstructorUsedError;
   int get followingCount => throw _privateConstructorUsedError;
@@ -55,7 +55,7 @@ abstract class $UserProfileCopyWith<$Res> {
       String username,
       String displayName,
       @JsonKey(name: 'photoURL') String? photoUrl,
-      String? bio,
+      String bio,
       int drawingsCount,
       int followersCount,
       int followingCount,
@@ -86,7 +86,7 @@ class _$UserProfileCopyWithImpl<$Res, $Val extends UserProfile>
     Object? username = null,
     Object? displayName = null,
     Object? photoUrl = freezed,
-    Object? bio = freezed,
+    Object? bio = null,
     Object? drawingsCount = null,
     Object? followersCount = null,
     Object? followingCount = null,
@@ -114,10 +114,10 @@ class _$UserProfileCopyWithImpl<$Res, $Val extends UserProfile>
           ? _value.photoUrl
           : photoUrl // ignore: cast_nullable_to_non_nullable
               as String?,
-      bio: freezed == bio
+      bio: null == bio
           ? _value.bio
           : bio // ignore: cast_nullable_to_non_nullable
-              as String?,
+              as String,
       drawingsCount: null == drawingsCount
           ? _value.drawingsCount
           : drawingsCount // ignore: cast_nullable_to_non_nullable
@@ -171,7 +171,7 @@ abstract class _$$UserProfileImplCopyWith<$Res>
       String username,
       String displayName,
       @JsonKey(name: 'photoURL') String? photoUrl,
-      String? bio,
+      String bio,
       int drawingsCount,
       int followersCount,
       int followingCount,
@@ -200,7 +200,7 @@ class __$$UserProfileImplCopyWithImpl<$Res>
     Object? username = null,
     Object? displayName = null,
     Object? photoUrl = freezed,
-    Object? bio = freezed,
+    Object? bio = null,
     Object? drawingsCount = null,
     Object? followersCount = null,
     Object? followingCount = null,
@@ -228,10 +228,10 @@ class __$$UserProfileImplCopyWithImpl<$Res>
           ? _value.photoUrl
           : photoUrl // ignore: cast_nullable_to_non_nullable
               as String?,
-      bio: freezed == bio
+      bio: null == bio
           ? _value.bio
           : bio // ignore: cast_nullable_to_non_nullable
-              as String?,
+              as String,
       drawingsCount: null == drawingsCount
           ? _value.drawingsCount
           : drawingsCount // ignore: cast_nullable_to_non_nullable
@@ -278,9 +278,9 @@ class _$UserProfileImpl implements _UserProfile {
   const _$UserProfileImpl(
       {required this.id,
       required this.username,
-      required this.displayName,
+      this.displayName = 'Yeni Kullanıcı',
       @JsonKey(name: 'photoURL') this.photoUrl,
-      this.bio,
+      this.bio = 'Merhaba! Ben yeni bir kullanıcıyım.',
       this.drawingsCount = 0,
       this.followersCount = 0,
       this.followingCount = 0,
@@ -303,12 +303,14 @@ class _$UserProfileImpl implements _UserProfile {
   @override
   final String username;
   @override
+  @JsonKey()
   final String displayName;
   @override
   @JsonKey(name: 'photoURL')
   final String? photoUrl;
   @override
-  final String? bio;
+  @JsonKey()
+  final String bio;
   @override
   @JsonKey()
   final int drawingsCount;
@@ -424,9 +426,9 @@ abstract class _UserProfile implements UserProfile {
   const factory _UserProfile(
       {required final String id,
       required final String username,
-      required final String displayName,
+      final String displayName,
       @JsonKey(name: 'photoURL') final String? photoUrl,
-      final String? bio,
+      final String bio,
       final int drawingsCount,
       final int followersCount,
       final int followingCount,
@@ -452,7 +454,7 @@ abstract class _UserProfile implements UserProfile {
   @JsonKey(name: 'photoURL')
   String? get photoUrl;
   @override
-  String? get bio;
+  String get bio;
   @override
   int get drawingsCount;
   @override

@@ -19,9 +19,11 @@ class FirestoreService {
           .limit(10)
           .get();
 
-      return querySnapshot.docs
-          .map((doc) => UserProfile.fromJson(doc.data()))
-          .toList();
+      return querySnapshot.docs.map((doc) {
+        final data = doc.data();
+        data['id'] = doc.id;
+        return UserProfile.fromFirestore(doc);
+      }).toList();
     } catch (e) {
       throw 'Kullanıcılar aranırken hata oluştu: $e';
     }

@@ -10,9 +10,9 @@ _$UserProfileImpl _$$UserProfileImplFromJson(Map<String, dynamic> json) =>
     _$UserProfileImpl(
       id: json['id'] as String,
       username: json['username'] as String,
-      displayName: json['displayName'] as String,
+      displayName: json['displayName'] as String? ?? 'Yeni Kullanıcı',
       photoUrl: json['photoURL'] as String?,
-      bio: json['bio'] as String?,
+      bio: json['bio'] as String? ?? 'Merhaba! Ben yeni bir kullanıcıyım.',
       drawingsCount: (json['drawingsCount'] as num?)?.toInt() ?? 0,
       followersCount: (json['followersCount'] as num?)?.toInt() ?? 0,
       followingCount: (json['followingCount'] as num?)?.toInt() ?? 0,
